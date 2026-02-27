@@ -691,9 +691,30 @@ function renderStats() {
     `;
 }
 
+let showAllComplete = false;
+
+function toggleComplete() {
+    showAllComplete = !showAllComplete;
+    renderKanban();
+}
+
 function renderKanban() {
+    const COMPLETE_LIMIT = 3;
     const cols = STATUSES.map(status => {
-        const statusOrders = orders.filter(o => o.status === status);
+        let statusOrders = orders.filter(o => o.status === status);
+        // Sort complete by most recent first, limit display
+        const totalComplete = statusOrders.length;
+        let showMoreBtn = '';
+        if (status === 'complete') {
+            statusOrders.sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+            if (!showAllComplete && statusOrders.length > COMPLETE_LIMIT) {
+                const hidden = statusOrders.length - COMPLETE_LIMIT;
+                statusOrders = statusOrders.slice(0, COMPLETE_LIMIT);
+                showMoreBtn = `<button onclick="toggleComplete()" style="width:100%;padding:10px;border:1px dashed #ccc;border-radius:8px;background:none;color:var(--text-light);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px;">Show ${hidden} more completed orders</button>`;
+            } else if (showAllComplete && totalComplete > COMPLETE_LIMIT) {
+                showMoreBtn = `<button onclick="toggleComplete()" style="width:100%;padding:10px;border:1px dashed #ccc;border-radius:8px;background:none;color:var(--text-light);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px;">Show less</button>`;
+            }
+        }
         const cards = statusOrders.map(o => `
             <div class="order-card ${o.type === 'pickup' ? 'is-pickup' : ''} ${o.priority === 'rush' ? 'is-rush' : ''}">
                 <div class="order-name">${o.name}${o.priority === 'rush' ? ' ⚡' : ''}</div>
@@ -720,9 +741,10 @@ function renderKanban() {
         return `
             <div class="kanban-col">
                 <div class="kanban-header">
-                    <div class="kanban-title"><span class="status-dot ${STATUS_DOTS[status]}"></span> ${STATUS_LABELS[status]} <span class="kanban-count">${statusOrders.length}</span></div>
+                    <div class="kanban-title"><span class="status-dot ${STATUS_DOTS[status]}"></span> ${STATUS_LABELS[status]} <span class="kanban-count">${status === 'complete' ? totalComplete : statusOrders.length}</span></div>
                 </div>
                 ${cards || '<div class="empty-state">No orders</div>'}
+                ${showMoreBtn}
             </div>
         `;
     }).join('');
