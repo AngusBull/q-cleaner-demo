@@ -1088,12 +1088,27 @@ function sendText() {
 }
 
 // ========== UI HELPERS ==========
+let reportPeriod = '30'; // default 30 days
+
+function setReportPeriod(period) {
+    reportPeriod = period;
+    renderReports();
+}
+
 function renderReports() {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
+    const periodDays = parseInt(reportPeriod) || 30;
+    const periodStart = new Date(now - periodDays * 86400000).toISOString().split('T')[0];
+    const prevPeriodStart = new Date(now - periodDays * 2 * 86400000).toISOString().split('T')[0];
     const weekAgo = new Date(now - 7*86400000).toISOString().split('T')[0];
     const monthAgo = new Date(now - 30*86400000).toISOString().split('T')[0];
     const prevMonthStart = new Date(now - 60*86400000).toISOString().split('T')[0];
+
+    // Filter orders by selected period
+    const periodOrders = reportPeriod === 'all' ? orders : orders.filter(o => o.created >= periodStart);
+    const prevPeriodOrders = reportPeriod === 'all' ? [] : orders.filter(o => o.created >= prevPeriodStart && o.created < periodStart);
+    const periodLabel = reportPeriod === '7' ? 'This Week' : reportPeriod === '30' ? 'This Month' : reportPeriod === '90' ? 'Last 90 Days' : reportPeriod === '365' ? 'This Year' : 'All Time';
 
     // Helper to get revenue from an order
     const getRevenue = (o) => {
@@ -1104,37 +1119,31 @@ function renderReports() {
         return parseFloat(p) || 0;
     };
 
-    // Time filters
-    const thisWeek = orders.filter(o => o.created >= weekAgo);
-    const thisMonth = orders.filter(o => o.created >= monthAgo);
-    const prevMonth = orders.filter(o => o.created >= prevMonthStart && o.created < monthAgo);
-
     // Revenue
-    const totalRevenue = orders.reduce((s, o) => s + getRevenue(o), 0);
-    const weekRevenue = thisWeek.reduce((s, o) => s + getRevenue(o), 0);
-    const monthRevenue = thisMonth.reduce((s, o) => s + getRevenue(o), 0);
-    const prevMonthRevenue = prevMonth.reduce((s, o) => s + getRevenue(o), 0);
-    const revenueChange = prevMonthRevenue > 0 ? ((monthRevenue - prevMonthRevenue) / prevMonthRevenue * 100).toFixed(0) : 0;
+    const periodRevenue = periodOrders.reduce((s, o) => s + getRevenue(o), 0);
+    const prevPeriodRevenue = prevPeriodOrders.reduce((s, o) => s + getRevenue(o), 0);
+    const revenueChange = prevPeriodRevenue > 0 ? ((periodRevenue - prevPeriodRevenue) / prevPeriodRevenue * 100).toFixed(0) : 0;
+    const allTimeRevenue = orders.reduce((s, o) => s + getRevenue(o), 0);
 
     // Volume
-    const totalOrders = orders.length;
-    const weekOrders = thisWeek.length;
-    const monthOrders = thisMonth.length;
+    const totalOrders = periodOrders.length;
+    const prevTotalOrders = prevPeriodOrders.length;
+    const orderChange = prevTotalOrders > 0 ? ((totalOrders - prevTotalOrders) / prevTotalOrders * 100).toFixed(0) : 0;
 
     // Averages
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    const avgDaily = monthOrders > 0 ? monthOrders / 30 : 0;
+    const avgOrderValue = totalOrders > 0 ? periodRevenue / totalOrders : 0;
+    const avgDaily = totalOrders > 0 ? totalOrders / Math.min(periodDays || 30, 30) : 0;
 
     // Pickup vs walk-in
-    const pickupCount = orders.filter(o => o.type === 'pickup').length;
-    const walkinCount = orders.filter(o => o.type === 'walkin' || o.type !== 'pickup').length;
-    const pickupRevenue = orders.filter(o => o.type === 'pickup').reduce((s, o) => s + getRevenue(o), 0);
-    const walkinRevenue = orders.filter(o => o.type === 'walkin' || o.type !== 'pickup').reduce((s, o) => s + getRevenue(o), 0);
+    const pickupCount = periodOrders.filter(o => o.type === 'pickup').length;
+    const walkinCount = periodOrders.filter(o => o.type === 'walkin' || o.type !== 'pickup').length;
+    const pickupRevenue = periodOrders.filter(o => o.type === 'pickup').reduce((s, o) => s + getRevenue(o), 0);
+    const walkinRevenue = periodOrders.filter(o => o.type === 'walkin' || o.type !== 'pickup').reduce((s, o) => s + getRevenue(o), 0);
 
     // Service breakdown
     const serviceCounts = {};
     const serviceRevenue = {};
-    orders.forEach(o => {
+    periodOrders.forEach(o => {
         const items = o.itemDetails || o.items || [];
         if (Array.isArray(items)) {
             items.forEach(it => {
@@ -1153,7 +1162,7 @@ function renderReports() {
     // Day of week distribution
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayCounts = [0,0,0,0,0,0,0];
-    orders.forEach(o => {
+    periodOrders.forEach(o => {
         if (o.created) {
             const d = new Date(o.created).getDay();
             dayCounts[d]++;
@@ -1163,20 +1172,20 @@ function renderReports() {
 
     // Status breakdown
     const statusCounts = {};
-    STATUSES.forEach(s => statusCounts[s] = orders.filter(o => o.status === s).length);
+    STATUSES.forEach(s => statusCounts[s] = periodOrders.filter(o => o.status === s).length);
 
     // Completion rate
-    const completed = orders.filter(o => o.status === 'complete').length;
+    const completed = periodOrders.filter(o => o.status === 'complete').length;
     const completionRate = totalOrders > 0 ? (completed / totalOrders * 100).toFixed(0) : 0;
 
     // Charged vs pending
-    const charged = orders.filter(o => o.paymentStatus === 'charged');
+    const charged = periodOrders.filter(o => o.paymentStatus === 'charged');
     const chargedTotal = charged.reduce((s, o) => s + Number(o.chargedAmount || 0), 0);
-    const pendingPayment = orders.filter(o => o.paymentStatus !== 'charged' && o.status !== 'complete');
+    const pendingPayment = periodOrders.filter(o => o.paymentStatus !== 'charged' && o.status !== 'complete');
 
     // Top items
     const itemCounts = {};
-    orders.forEach(o => {
+    periodOrders.forEach(o => {
         const items = o.itemDetails || o.items || [];
         if (Array.isArray(items)) {
             items.forEach(it => {
@@ -1187,24 +1196,34 @@ function renderReports() {
     const topItems = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 8);
     const maxItemCount = topItems.length > 0 ? topItems[0][1] : 1;
 
+    const prevLabel = reportPeriod === '7' ? 'prev week' : reportPeriod === '30' ? 'prev month' : reportPeriod === '90' ? 'prev 90 days' : reportPeriod === '365' ? 'prev year' : '';
+
     document.getElementById('reportsView').innerHTML = `
+        <!-- Time Period Selector -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3 style="font-size:18px;font-weight:700;color:var(--green-dark);margin:0;">📈 ${periodLabel}</h3>
+            <div style="display:flex;gap:4px;background:white;border-radius:8px;padding:4px;box-shadow:var(--shadow);">
+                <button onclick="setReportPeriod('7')" style="padding:6px 14px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;${reportPeriod==='7'?'background:var(--green);color:white;':'background:transparent;color:var(--text-light);'}">7D</button>
+                <button onclick="setReportPeriod('30')" style="padding:6px 14px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;${reportPeriod==='30'?'background:var(--green);color:white;':'background:transparent;color:var(--text-light);'}">30D</button>
+                <button onclick="setReportPeriod('90')" style="padding:6px 14px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;${reportPeriod==='90'?'background:var(--green);color:white;':'background:transparent;color:var(--text-light);'}">90D</button>
+                <button onclick="setReportPeriod('365')" style="padding:6px 14px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;${reportPeriod==='365'?'background:var(--green);color:white;':'background:transparent;color:var(--text-light);'}">1Y</button>
+                <button onclick="setReportPeriod('all')" style="padding:6px 14px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;${reportPeriod==='all'?'background:var(--green);color:white;':'background:transparent;color:var(--text-light);'}">All</button>
+            </div>
+        </div>
+
         <!-- KPI Cards -->
         <div class="report-grid">
             <div class="report-card">
-                <h4>Total Revenue</h4>
-                <div class="report-big">$${totalRevenue.toFixed(0)}</div>
-                <div class="report-sub">All time</div>
-                ${revenueChange != 0 ? `<div class="report-change ${revenueChange > 0 ? 'up' : 'down'}">${revenueChange > 0 ? '↑' : '↓'} ${Math.abs(revenueChange)}% vs prev month</div>` : ''}
+                <h4>Revenue</h4>
+                <div class="report-big">$${periodRevenue.toFixed(0)}</div>
+                <div class="report-sub">${periodLabel}</div>
+                ${revenueChange != 0 && prevLabel ? `<div class="report-change ${revenueChange > 0 ? 'up' : 'down'}">${revenueChange > 0 ? '↑' : '↓'} ${Math.abs(revenueChange)}% vs ${prevLabel}</div>` : ''}
             </div>
             <div class="report-card">
-                <h4>This Week</h4>
-                <div class="report-big">${weekOrders}</div>
-                <div class="report-sub">orders · $${weekRevenue.toFixed(0)} revenue</div>
-            </div>
-            <div class="report-card">
-                <h4>This Month</h4>
-                <div class="report-big">${monthOrders}</div>
-                <div class="report-sub">orders · $${monthRevenue.toFixed(0)} revenue</div>
+                <h4>Orders</h4>
+                <div class="report-big">${totalOrders}</div>
+                <div class="report-sub">${periodLabel}</div>
+                ${orderChange != 0 && prevLabel ? `<div class="report-change ${orderChange > 0 ? 'up' : 'down'}">${orderChange > 0 ? '↑' : '↓'} ${Math.abs(orderChange)}% vs ${prevLabel}</div>` : ''}
             </div>
             <div class="report-card">
                 <h4>Avg Order Value</h4>
@@ -1220,6 +1239,11 @@ function renderReports() {
                 <h4>Payments Collected</h4>
                 <div class="report-big">$${chargedTotal.toFixed(0)}</div>
                 <div class="report-sub">${charged.length} charged · ${pendingPayment.length} pending</div>
+            </div>
+            <div class="report-card">
+                <h4>All-Time Revenue</h4>
+                <div class="report-big">$${allTimeRevenue.toFixed(0)}</div>
+                <div class="report-sub">${orders.length} total orders</div>
             </div>
         </div>
 
