@@ -656,7 +656,11 @@ function renderKanban() {
                 <div class="order-name">${o.name}${o.priority === 'rush' ? ' ⚡' : ''}</div>
                 ${o.address ? `<div class="order-address">📍 ${o.address}</div>` : ''}
                 <div class="order-meta">${o.type === 'pickup' && o.pickupDay ? o.pickupDay + ' ' + (o.pickupTime || '') : timeAgo(o.created)}</div>
-                <div class="order-items">${(o.items || o.itemsSummary || 'No items').split(',').map(i => `<span class="order-item">${i.trim()}</span>`).join('')}</div>
+                <div class="order-items">${(function(){
+                    let items = o.items || o.itemsSummary || 'No items';
+                    if (Array.isArray(items)) return items.map(i => `<span class="order-item">${i.qty > 1 ? i.qty + '× ' : ''}${i.name || i}</span>`).join('');
+                    return String(items).split(',').map(i => `<span class="order-item">${i.trim()}</span>`).join('');
+                })()}</div>
                 <div class="order-footer">
                     <span class="order-type ${o.type === 'pickup' ? 'type-pickup' : 'type-walkin'}">${o.type === 'pickup' ? '🚗 Pickup' : 'Walk-in'}</span>
                     <span class="order-price">${o.price || '—'}</span>
