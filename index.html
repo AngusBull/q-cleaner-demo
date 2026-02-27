@@ -986,12 +986,17 @@
 
     function showConfirmation(e) {
         e.preventDefault();
+        var form = e.target.closest ? e.target.closest('form') : e.target;
+        if (!form || !form.reset) form = document.querySelector('.contact-form form');
         document.getElementById('confirmModal').classList.add('active');
         // Reset form and item picker
-        e.target.reset();
-        custItems = [];
-        renderCustomerItems();
-        document.getElementById('pickupFields').style.display = 'none';
+        setTimeout(function() {
+            form.reset();
+            custItems = [];
+            renderCustomerItems();
+            document.getElementById('pickupFields').style.display = 'none';
+            document.getElementById('serviceSelect').value = '';
+        }, 300);
     }
     function closeModal() {
         document.getElementById('confirmModal').classList.remove('active');
