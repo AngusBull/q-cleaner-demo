@@ -1101,7 +1101,8 @@
         const sel = document.getElementById('custGarmentSelect');
         if (!sel.value) return;
         const [name, service, price] = sel.value.split('|');
-        custItems.push({ name, service, price: parseFloat(price), qty: 1, note: '' });
+        const isWeighed = name.toLowerCase().includes('wash') || name.toLowerCase().includes('fold');
+        custItems.push({ name, service, price: parseFloat(price), qty: 1, note: '', weighed: isWeighed });
         sel.value = '';
         renderCustomerItems();
     }
@@ -1123,12 +1124,14 @@
             <div>
                 <div class="item-row">
                     <span class="item-name">${item.name}</span>
-                    <span class="item-service">${svcLabels[item.service] || item.service}</span>
+                    ${item.weighed
+                        ? '<span class="item-service" style="background:#fff8e1;color:#e67e22;">⚖️ Weighed at pickup</span>'
+                        : `<span class="item-service">${svcLabels[item.service] || item.service}</span>
                     <div class="item-qty">
                         <button type="button" onclick="updateCustQty(${i},-1)">−</button>
                         <span>${item.qty}</span>
                         <button type="button" onclick="updateCustQty(${i},1)">+</button>
-                    </div>
+                    </div>`}
                     <button type="button" class="item-remove" onclick="removeCustItem(${i})">✕</button>
                 </div>
                 <input class="item-note-input" placeholder="Note (optional): stain, color, special instructions..." value="${item.note}" oninput="updateCustNote(${i},this.value)">
@@ -1136,12 +1139,15 @@
         `).join('');
         const totalItems = custItems.reduce((s, it) => s + it.qty, 0);
         const isPickup = document.getElementById('serviceSelect') && document.getElementById('serviceSelect').value === 'pickup';
-        const subtotal = custItems.reduce((s, it) => s + (it.price + (isPickup ? PICKUP_SURCHARGE : 0)) * it.qty, 0);
+        const subtotal = custItems.filter(it => !it.weighed).reduce((s, it) => s + (it.price + (isPickup ? PICKUP_SURCHARGE : 0)) * it.qty, 0);
+        const hasWeighed = custItems.some(it => it.weighed);
         const fee = (isPickup && subtotal > 0 && subtotal < FREE_DELIVERY_MIN) ? DELIVERY_FEE : 0;
         document.getElementById('custItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
-        document.getElementById('custItemTotal').innerHTML = fee > 0
-            ? '$' + subtotal.toFixed(2) + ' <span style="font-size:12px;color:#e67e22;">+ $' + fee.toFixed(2) + ' delivery</span>'
-            : '$' + subtotal.toFixed(2) + (isPickup && subtotal >= FREE_DELIVERY_MIN ? ' <span style="font-size:12px;color:var(--plum);">FREE delivery ✓</span>' : '');
+        let totalHtml = '$' + subtotal.toFixed(2);
+        if (hasWeighed) totalHtml += ' <span style="font-size:12px;color:#e67e22;">+ wash & fold (weighed at pickup)</span>';
+        else if (fee > 0) totalHtml += ' <span style="font-size:12px;color:#e67e22;">+ $' + fee.toFixed(2) + ' delivery</span>';
+        else if (isPickup && subtotal >= FREE_DELIVERY_MIN) totalHtml += ' <span style="font-size:12px;color:var(--plum);">FREE delivery ✓</span>';
+        document.getElementById('custItemTotal').innerHTML = totalHtml;
     }
 
     document.querySelectorAll('a[href^="#"]').forEach(a => {
