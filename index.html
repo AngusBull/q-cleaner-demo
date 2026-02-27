@@ -1005,15 +1005,29 @@
     }
     initFirebase();
 
+    const DELIVERY_TOWNS = ['acton', 'concord', 'sudbury', 'maynard', 'littleton'];
+    const DELIVERY_FEE = 5.99;
+    const FREE_DELIVERY_MIN = 30;
+
+    function validateDeliveryAddress(address) {
+        const addr = address.toLowerCase();
+        return DELIVERY_TOWNS.some(town => addr.includes(town));
+    }
+
     async function submitOrder(form) {
+        const subtotal = custItems.reduce((s, it) => s + it.price * it.qty, 0);
+        const isPickup = document.getElementById('serviceSelect').value === 'pickup';
+        const deliveryFee = (isPickup && subtotal < FREE_DELIVERY_MIN) ? DELIVERY_FEE : 0;
         const data = {
             name: form.querySelector('input[type="text"]').value,
             phone: form.querySelector('input[type="tel"]').value,
             email: form.querySelector('input[type="email"]').value || '',
-            type: document.getElementById('serviceSelect').value === 'pickup' ? 'pickup' : 'walkin',
+            type: isPickup ? 'pickup' : 'walkin',
             items: custItems.map(it => ({ name: it.name, service: it.service, price: it.price, qty: it.qty, note: it.note })),
             itemsSummary: custItems.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', '),
-            estimatedTotal: custItems.reduce((s, it) => s + it.price * it.qty, 0),
+            subtotal: subtotal,
+            deliveryFee: deliveryFee,
+            estimatedTotal: subtotal + deliveryFee,
             status: 'new',
             priority: 'normal',
             sms: true,
@@ -1039,6 +1053,22 @@
         e.preventDefault();
         var form = e.target.closest ? e.target.closest('form') : e.target;
         if (!form || !form.reset) form = document.querySelector('.contact-form form');
+
+        // Validate delivery address if pickup
+        const isPickup = document.getElementById('serviceSelect').value === 'pickup';
+        if (isPickup) {
+            const addrInput = document.getElementById('pickupFields').querySelector('input[type="text"]');
+            const addr = addrInput ? addrInput.value : '';
+            if (!addr.trim()) {
+                alert('Please enter your pickup address.');
+                return;
+            }
+            if (!validateDeliveryAddress(addr)) {
+                alert('Sorry, we currently deliver to Acton, Concord, Sudbury, Maynard, and Littleton only. For other areas, please drop off at our shop.');
+                return;
+            }
+        }
+
         submitOrder(form);
         document.getElementById('confirmModal').classList.add('active');
         setTimeout(function() {
@@ -1057,6 +1087,7 @@
         const sel = document.getElementById('serviceSelect');
         const fields = document.getElementById('pickupFields');
         fields.style.display = sel.value === 'pickup' ? 'block' : 'none';
+        renderCustomerItems(); // update delivery fee display
     }
 
     // ===== ITEM PICKER =====
@@ -1099,9 +1130,13 @@
             </div>
         `).join('');
         const totalItems = custItems.reduce((s, it) => s + it.qty, 0);
-        const totalPrice = custItems.reduce((s, it) => s + it.price * it.qty, 0);
+        const subtotal = custItems.reduce((s, it) => s + it.price * it.qty, 0);
+        const isPickup = document.getElementById('serviceSelect') && document.getElementById('serviceSelect').value === 'pickup';
+        const fee = (isPickup && subtotal > 0 && subtotal < FREE_DELIVERY_MIN) ? DELIVERY_FEE : 0;
         document.getElementById('custItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
-        document.getElementById('custItemTotal').textContent = '$' + totalPrice.toFixed(2);
+        document.getElementById('custItemTotal').innerHTML = fee > 0
+            ? '$' + subtotal.toFixed(2) + ' <span style="font-size:12px;color:#e67e22;">+ $' + fee.toFixed(2) + ' delivery</span>'
+            : '$' + subtotal.toFixed(2) + (isPickup && subtotal >= FREE_DELIVERY_MIN ? ' <span style="font-size:12px;color:var(--plum);">FREE delivery ✓</span>' : '');
     }
 
     document.querySelectorAll('a[href^="#"]').forEach(a => {
