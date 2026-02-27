@@ -656,7 +656,7 @@ function renderKanban() {
                 <div class="order-name">${o.name}${o.priority === 'rush' ? ' ⚡' : ''}</div>
                 ${o.address ? `<div class="order-address">📍 ${o.address}</div>` : ''}
                 <div class="order-meta">${o.type === 'pickup' && o.pickupDay ? o.pickupDay + ' ' + (o.pickupTime || '') : timeAgo(o.created)}</div>
-                <div class="order-items">${o.items.split(',').map(i => `<span class="order-item">${i.trim()}</span>`).join('')}</div>
+                <div class="order-items">${(o.items || o.itemsSummary || 'No items').split(',').map(i => `<span class="order-item">${i.trim()}</span>`).join('')}</div>
                 <div class="order-footer">
                     <span class="order-type ${o.type === 'pickup' ? 'type-pickup' : 'type-walkin'}">${o.type === 'pickup' ? '🚗 Pickup' : 'Walk-in'}</span>
                     <span class="order-price">${o.price || '—'}</span>
@@ -689,7 +689,7 @@ function renderTable() {
             <td><strong>${o.name}</strong>${o.address ? `<br><span style="font-size:11px;color:var(--text-light)">${o.address}</span>` : ''}</td>
             <td>${o.phone}</td>
             <td><span class="order-type ${o.type === 'pickup' ? 'type-pickup' : 'type-walkin'}">${o.type === 'pickup' ? '🚗 Pickup' : 'Walk-in'}</span></td>
-            <td>${o.items}</td>
+            <td>${o.items || o.itemsSummary || '—'}</td>
             <td><span class="status-badge ${STATUS_BADGES[o.status]}">● ${STATUS_LABELS[o.status]}</span></td>
             <td>${o.price || '—'}</td>
             <td>${new Date(o.created).toLocaleDateString()}</td>
