@@ -878,13 +878,31 @@ function showDetail(id) {
                 : o.items
         }</div></div>
         <div class="detail-grid">
-            <div class="detail-section"><div class="detail-label">Price</div><div class="detail-value">${o.price || 'TBD'}</div></div>
+            <div class="detail-section"><div class="detail-label">Price</div><div class="detail-value">${o.price || (o.estimatedTotal ? '$' + Number(o.estimatedTotal).toFixed(2) : 'TBD')}${o.deliveryFee ? ` <span style="font-size:11px;color:#e67e22;">(incl. $${Number(o.deliveryFee).toFixed(2)} delivery)</span>` : ''}${o.paymentStatus ? ` <span style="font-size:11px;color:${o.paymentStatus === 'charged' ? 'var(--green)' : '#e67e22'};">${o.paymentStatus === 'charged' ? '✅ Charged' : '💳 Card on file'}</span>` : ''}</div></div>
             <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value">${o.due || '—'}</div></div>
         </div>
+        ${(function(){
+            const items = o.items || o.itemDetails || [];
+            const needsWeigh = Array.isArray(items) && items.some(it => (it.name || '').toLowerCase().includes('wash') || (it.name || '').toLowerCase().includes('fold'));
+            const needsQuote = Array.isArray(items) && items.some(it => it.price === 0);
+            if (needsWeigh && !o.actualWeight) {
+                return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">⚖️ Needs Weighing</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><input type="number" id="weightInput_'+o.id+'" placeholder="lbs" step="0.5" min="0" style="width:80px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"><span style="font-size:13px;color:#888;">× $2.50/lb</span><span id="weightTotal_'+o.id+'" style="font-weight:700;color:var(--green-dark);"></span></div><button class="order-btn advance" onclick="recordWeight(\''+o.id+'\')" style="margin-top:8px;width:100%;padding:10px;">⚖️ Record Weight & Calculate</button></div>';
+            } else if (needsWeigh && o.actualWeight) {
+                return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:var(--green-dark);">⚖️ Weighed</div><div style="font-size:15px;font-weight:600;margin-top:4px;">'+o.actualWeight+' lbs × $2.50 = $'+(o.actualWeight * 2.50).toFixed(2)+'</div></div>';
+            } else if (needsQuote && !o.quotedPrice) {
+                return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">💰 Needs Quote</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><span>$</span><input type="number" id="quoteInput_'+o.id+'" placeholder="0.00" step="0.01" min="0" style="width:100px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"></div><button class="order-btn advance" onclick="recordQuote(\''+o.id+'\')" style="margin-top:8px;width:100%;padding:10px;">💰 Set Price & Notify Customer</button></div>';
+            }
+            return '';
+        })()}
+        ${(function(){
+            if (o.paymentStatus === 'charged') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Charged $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
+            const amt = Number(o.finalTotal || o.estimatedTotal || 0).toFixed(2);
+            return '<div class="detail-section"><button class="order-btn advance" onclick="chargeCard(\''+o.id+'\')" style="width:100%;padding:12px;font-size:14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;">💳 Charge Card — $'+amt+'</button></div>';
+        })()}
         ${o.notes ? `<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${o.notes}</div></div>` : ''}
         <div class="detail-section" style="margin-top:16px;">
             <div class="detail-label">Status</div>
-            <select class="status-select" onchange="changeStatus(${o.id}, this.value)">
+            <select class="status-select" onchange="changeStatus('${o.id}', this.value)">
                 ${STATUSES.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
             </select>
         </div>
@@ -904,6 +922,83 @@ function changeStatus(id, newStatus) {
     save();
     render();
     showToast(`✅ ${order.name} → ${STATUS_LABELS[newStatus]}`);
+}
+
+function recordWeight(id) {
+    const order = orders.find(o => String(o.id) === String(id));
+    if (!order) return;
+    const input = document.getElementById('weightInput_' + id);
+    const weight = parseFloat(input ? input.value : 0);
+    if (!weight || weight <= 0) { alert('Please enter the weight in pounds.'); return; }
+    order.actualWeight = weight;
+    const washTotal = weight * 2.50;
+    // Recalculate total: non-wash items at original price + wash items at actual weight
+    const items = order.items || order.itemDetails || [];
+    let otherTotal = 0;
+    if (Array.isArray(items)) {
+        items.forEach(it => {
+            const name = (it.name || '').toLowerCase();
+            if (!name.includes('wash') && !name.includes('fold')) {
+                otherTotal += (it.price || 0) * (it.qty || 1);
+            }
+        });
+    }
+    const isPickup = order.type === 'pickup';
+    const surcharge = isPickup ? items.reduce((s, it) => s + (it.qty || 1), 0) : 0;
+    order.finalTotal = otherTotal + washTotal + surcharge + (order.deliveryFee || 0);
+    order.price = '$' + order.finalTotal.toFixed(2);
+    fbSaveOrder(order);
+    save();
+    // Send SMS with actual price
+    const firstName = order.name.split(' ')[0];
+    const msg = `Hi ${firstName}! Your laundry weighed ${weight} lbs — total is $${order.finalTotal.toFixed(2)}. This will be charged to your card on file. Questions? Call 978-407-7554`;
+    smsLog.push({ to: order.name, message: msg, time: new Date().toISOString(), auto: true, orderId: order._fbId || order.id });
+    save();
+    closeModal('detailModal');
+    render();
+    showToast(`⚖️ ${weight} lbs recorded — $${order.finalTotal.toFixed(2)} total`);
+}
+
+function recordQuote(id) {
+    const order = orders.find(o => String(o.id) === String(id));
+    if (!order) return;
+    const input = document.getElementById('quoteInput_' + id);
+    const price = parseFloat(input ? input.value : 0);
+    if (!price || price <= 0) { alert('Please enter a price.'); return; }
+    order.quotedPrice = price;
+    order.finalTotal = price + (order.deliveryFee || 0);
+    order.price = '$' + order.finalTotal.toFixed(2);
+    fbSaveOrder(order);
+    save();
+    const firstName = order.name.split(' ')[0];
+    const msg = `Hi ${firstName}! Kim has quoted your order at $${order.finalTotal.toFixed(2)}. This will be charged to your card on file when complete. Questions? Call 978-407-7554`;
+    smsLog.push({ to: order.name, message: msg, time: new Date().toISOString(), auto: true, orderId: order._fbId || order.id });
+    save();
+    closeModal('detailModal');
+    render();
+    showToast(`💰 Quote set — $${order.finalTotal.toFixed(2)}`);
+}
+
+function chargeCard(id) {
+    const order = orders.find(o => String(o.id) === String(id));
+    if (!order) return;
+    const amount = order.finalTotal || order.estimatedTotal || 0;
+    if (!amount) { alert('No amount to charge. Record weight or set price first.'); return; }
+    if (!confirm(`Charge $${Number(amount).toFixed(2)} to ${order.name}'s card on file?`)) return;
+    // When Square is connected, this calls Square Payments API
+    // For now, mark as charged in the system
+    order.paymentStatus = 'charged';
+    order.chargedAmount = amount;
+    order.chargedAt = new Date().toISOString();
+    fbSaveOrder(order);
+    save();
+    const firstName = order.name.split(' ')[0];
+    const msg = `Hi ${firstName}! Your card has been charged $${Number(amount).toFixed(2)} for your Q Cleaner & Tailor order. Thank you! 💚`;
+    smsLog.push({ to: order.name, message: msg, time: new Date().toISOString(), auto: true, orderId: order._fbId || order.id });
+    save();
+    closeModal('detailModal');
+    render();
+    showToast(`💳 $${Number(amount).toFixed(2)} charged to ${order.name}`);
 }
 
 function quickText(id) {
