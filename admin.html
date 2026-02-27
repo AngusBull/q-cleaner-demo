@@ -534,6 +534,11 @@ async function initFirebase() {
                 // Normalize items field for SMS templates
                 if (!d.items && d.itemsSummary) d.items = d.itemsSummary;
                 if (!d.items && d.itemDetails) d.items = d.itemDetails.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
+                // Log confirmation SMS for new orders from website
+                if (d.smsPending && d.confirmSms && !smsLog.find(s => s.orderId === doc.id)) {
+                    smsLog.push({ to: d.name, message: d.confirmSms, time: d.created, auto: true, orderId: doc.id, status: 'pending_twilio' });
+                    showToast(`🆕 New order from ${d.name}!`);
+                }
                 fbOrders.push(d);
             });
             // Merge: FB orders + local-only demo orders

@@ -1043,6 +1043,17 @@
             data.pickupTime = inputs[2] ? inputs[2].value : '';
             data.sms = document.getElementById('smsOpt') ? document.getElementById('smsOpt').checked : true;
         }
+        // Build confirmation SMS (sent via Twilio when enabled)
+        const firstName = data.name.split(' ')[0];
+        const itemCount = data.items.reduce((s, it) => s + it.qty, 0);
+        const itemList = data.itemsSummary || data.items.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
+        if (data.type === 'pickup') {
+            data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. Kim will confirm your pickup for ${data.pickupDay || 'your requested day'}${data.pickupTime ? ' ' + data.pickupTime : ''}. Questions? Call 978-407-7554`;
+        } else {
+            data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. We'll text you when it's ready for pickup at 159A Great Rd, Acton. Questions? Call 978-407-7554`;
+        }
+        data.smsPending = true; // Flag for Twilio to pick up
+
         if (db && window._fb) {
             try {
                 await window._fb.addDoc(window._fb.collection(db, 'orders'), data);
