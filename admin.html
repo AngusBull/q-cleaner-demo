@@ -190,6 +190,34 @@
         .item-note-input:focus { outline: none; background: #fafafa; }
         .item-picker-footer { padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
         .item-picker-footer .total { font-weight: 700; color: var(--green-dark); }
+        /* REPORTS */
+        .reports-view { padding: 8px 0; }
+        .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .report-card { background: white; border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+        .report-card h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 8px; }
+        .report-big { font-size: 32px; font-weight: 700; color: var(--green-dark); }
+        .report-sub { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+        .report-change { font-size: 12px; font-weight: 600; margin-top: 4px; }
+        .report-change.up { color: #27ae60; }
+        .report-change.down { color: #e74c3c; }
+        .report-section { background: white; border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        .report-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--green-dark); }
+        .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+        .bar-row { display: flex; align-items: center; gap: 10px; }
+        .bar-label { width: 80px; font-size: 12px; color: var(--text-light); text-align: right; flex-shrink: 0; }
+        .bar-track { flex: 1; height: 24px; background: #f0f0f0; border-radius: 6px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; color: white; min-width: 30px; transition: width 0.5s ease; }
+        .bar-value { font-size: 13px; font-weight: 600; width: 50px; flex-shrink: 0; }
+        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .metric-row:last-child { border-bottom: none; }
+        .metric-label { font-size: 14px; color: var(--text); }
+        .metric-value { font-size: 14px; font-weight: 600; color: var(--green-dark); }
+        .report-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        @media (max-width: 768px) {
+            .report-grid { grid-template-columns: repeat(2, 1fr); }
+            .report-two-col { grid-template-columns: 1fr; }
+        }
+
         .form-submit { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px; }
         .form-submit:hover { background: var(--green-dark); }
         .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -239,6 +267,7 @@
         <div class="view-tabs">
             <button class="view-tab active" onclick="switchView('kanban')">📋 Board</button>
             <button class="view-tab" onclick="switchView('table')">📊 Table</button>
+            <button class="view-tab" onclick="switchView('reports')">📈 Reports</button>
         </div>
         <div class="view-actions">
             <button class="btn-sm secondary" onclick="showRoute()">🗺️ Today's Route</button>
@@ -249,6 +278,7 @@
 
     <div class="kanban" id="kanbanView"></div>
     <div class="table-view" id="tableView"></div>
+    <div class="reports-view" id="reportsView" style="display:none;"></div>
 
     <div class="bottom-grid">
         <div class="panel">
@@ -1058,16 +1088,258 @@ function sendText() {
 }
 
 // ========== UI HELPERS ==========
+function renderReports() {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const weekAgo = new Date(now - 7*86400000).toISOString().split('T')[0];
+    const monthAgo = new Date(now - 30*86400000).toISOString().split('T')[0];
+    const prevMonthStart = new Date(now - 60*86400000).toISOString().split('T')[0];
+
+    // Helper to get revenue from an order
+    const getRevenue = (o) => {
+        if (o.chargedAmount) return Number(o.chargedAmount);
+        if (o.finalTotal) return Number(o.finalTotal);
+        if (o.estimatedTotal) return Number(o.estimatedTotal);
+        const p = String(o.price || '0').replace(/[^0-9.]/g, '');
+        return parseFloat(p) || 0;
+    };
+
+    // Time filters
+    const thisWeek = orders.filter(o => o.created >= weekAgo);
+    const thisMonth = orders.filter(o => o.created >= monthAgo);
+    const prevMonth = orders.filter(o => o.created >= prevMonthStart && o.created < monthAgo);
+
+    // Revenue
+    const totalRevenue = orders.reduce((s, o) => s + getRevenue(o), 0);
+    const weekRevenue = thisWeek.reduce((s, o) => s + getRevenue(o), 0);
+    const monthRevenue = thisMonth.reduce((s, o) => s + getRevenue(o), 0);
+    const prevMonthRevenue = prevMonth.reduce((s, o) => s + getRevenue(o), 0);
+    const revenueChange = prevMonthRevenue > 0 ? ((monthRevenue - prevMonthRevenue) / prevMonthRevenue * 100).toFixed(0) : 0;
+
+    // Volume
+    const totalOrders = orders.length;
+    const weekOrders = thisWeek.length;
+    const monthOrders = thisMonth.length;
+
+    // Averages
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const avgDaily = monthOrders > 0 ? monthOrders / 30 : 0;
+
+    // Pickup vs walk-in
+    const pickupCount = orders.filter(o => o.type === 'pickup').length;
+    const walkinCount = orders.filter(o => o.type === 'walkin' || o.type !== 'pickup').length;
+    const pickupRevenue = orders.filter(o => o.type === 'pickup').reduce((s, o) => s + getRevenue(o), 0);
+    const walkinRevenue = orders.filter(o => o.type === 'walkin' || o.type !== 'pickup').reduce((s, o) => s + getRevenue(o), 0);
+
+    // Service breakdown
+    const serviceCounts = {};
+    const serviceRevenue = {};
+    orders.forEach(o => {
+        const items = o.itemDetails || o.items || [];
+        if (Array.isArray(items)) {
+            items.forEach(it => {
+                if (it.name) {
+                    const svc = it.service || 'other';
+                    serviceCounts[svc] = (serviceCounts[svc] || 0) + (it.qty || 1);
+                    serviceRevenue[svc] = (serviceRevenue[svc] || 0) + (it.price || 0) * (it.qty || 1);
+                }
+            });
+        }
+    });
+    const svcLabels = { clean: 'Dry Cleaning', laundry: 'Laundry', household: 'Household', alter: 'Alterations', specialty: 'Specialty', other: 'Other' };
+    const svcColors = { clean: '#2d5a27', laundry: '#3498db', household: '#9b59b6', alter: '#e67e22', specialty: '#e74c3c', other: '#95a5a6' };
+    const maxSvcCount = Math.max(1, ...Object.values(serviceCounts));
+
+    // Day of week distribution
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayCounts = [0,0,0,0,0,0,0];
+    orders.forEach(o => {
+        if (o.created) {
+            const d = new Date(o.created).getDay();
+            dayCounts[d]++;
+        }
+    });
+    const maxDayCount = Math.max(1, ...dayCounts);
+
+    // Status breakdown
+    const statusCounts = {};
+    STATUSES.forEach(s => statusCounts[s] = orders.filter(o => o.status === s).length);
+
+    // Completion rate
+    const completed = orders.filter(o => o.status === 'complete').length;
+    const completionRate = totalOrders > 0 ? (completed / totalOrders * 100).toFixed(0) : 0;
+
+    // Charged vs pending
+    const charged = orders.filter(o => o.paymentStatus === 'charged');
+    const chargedTotal = charged.reduce((s, o) => s + Number(o.chargedAmount || 0), 0);
+    const pendingPayment = orders.filter(o => o.paymentStatus !== 'charged' && o.status !== 'complete');
+
+    // Top items
+    const itemCounts = {};
+    orders.forEach(o => {
+        const items = o.itemDetails || o.items || [];
+        if (Array.isArray(items)) {
+            items.forEach(it => {
+                if (it.name) itemCounts[it.name] = (itemCounts[it.name] || 0) + (it.qty || 1);
+            });
+        }
+    });
+    const topItems = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 8);
+    const maxItemCount = topItems.length > 0 ? topItems[0][1] : 1;
+
+    document.getElementById('reportsView').innerHTML = `
+        <!-- KPI Cards -->
+        <div class="report-grid">
+            <div class="report-card">
+                <h4>Total Revenue</h4>
+                <div class="report-big">$${totalRevenue.toFixed(0)}</div>
+                <div class="report-sub">All time</div>
+                ${revenueChange != 0 ? `<div class="report-change ${revenueChange > 0 ? 'up' : 'down'}">${revenueChange > 0 ? '↑' : '↓'} ${Math.abs(revenueChange)}% vs prev month</div>` : ''}
+            </div>
+            <div class="report-card">
+                <h4>This Week</h4>
+                <div class="report-big">${weekOrders}</div>
+                <div class="report-sub">orders · $${weekRevenue.toFixed(0)} revenue</div>
+            </div>
+            <div class="report-card">
+                <h4>This Month</h4>
+                <div class="report-big">${monthOrders}</div>
+                <div class="report-sub">orders · $${monthRevenue.toFixed(0)} revenue</div>
+            </div>
+            <div class="report-card">
+                <h4>Avg Order Value</h4>
+                <div class="report-big">$${avgOrderValue.toFixed(2)}</div>
+                <div class="report-sub">${avgDaily.toFixed(1)} orders/day avg</div>
+            </div>
+            <div class="report-card">
+                <h4>Completion Rate</h4>
+                <div class="report-big">${completionRate}%</div>
+                <div class="report-sub">${completed} of ${totalOrders} orders</div>
+            </div>
+            <div class="report-card">
+                <h4>Payments Collected</h4>
+                <div class="report-big">$${chargedTotal.toFixed(0)}</div>
+                <div class="report-sub">${charged.length} charged · ${pendingPayment.length} pending</div>
+            </div>
+        </div>
+
+        <div class="report-two-col">
+            <!-- Service Breakdown -->
+            <div class="report-section">
+                <h3>📊 Revenue by Service</h3>
+                <div class="bar-chart">
+                    ${Object.keys(serviceCounts).sort((a,b) => (serviceRevenue[b]||0) - (serviceRevenue[a]||0)).map(svc => `
+                        <div class="bar-row">
+                            <div class="bar-label">${svcLabels[svc] || svc}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width:${Math.max(5, serviceCounts[svc]/maxSvcCount*100)}%;background:${svcColors[svc] || '#888'};">
+                                    ${serviceCounts[svc]}
+                                </div>
+                            </div>
+                            <div class="bar-value">$${(serviceRevenue[svc]||0).toFixed(0)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Busiest Days -->
+            <div class="report-section">
+                <h3>📅 Busiest Days</h3>
+                <div class="bar-chart">
+                    ${dayNames.map((day, i) => `
+                        <div class="bar-row">
+                            <div class="bar-label">${day}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width:${Math.max(5, dayCounts[i]/maxDayCount*100)}%;background:${i === 0 || i === 6 ? '#95a5a6' : 'var(--green)'};">
+                                    ${dayCounts[i]}
+                                </div>
+                            </div>
+                            <div class="bar-value">${dayCounts[i]} orders</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+
+        <div class="report-two-col">
+            <!-- Pickup vs Walk-in -->
+            <div class="report-section">
+                <h3>🚗 Pickup vs Walk-in</h3>
+                <div style="display:flex;gap:16px;margin-bottom:16px;">
+                    <div style="flex:1;text-align:center;padding:16px;background:var(--green-pale);border-radius:10px;">
+                        <div style="font-size:24px;font-weight:700;color:var(--green-dark);">${pickupCount}</div>
+                        <div style="font-size:12px;color:var(--text-light);">Pickup Orders</div>
+                        <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-top:4px;">$${pickupRevenue.toFixed(0)}</div>
+                    </div>
+                    <div style="flex:1;text-align:center;padding:16px;background:#f0f0f0;border-radius:10px;">
+                        <div style="font-size:24px;font-weight:700;color:#555;">${walkinCount}</div>
+                        <div style="font-size:12px;color:var(--text-light);">Walk-in Orders</div>
+                        <div style="font-size:14px;font-weight:600;color:#555;margin-top:4px;">$${walkinRevenue.toFixed(0)}</div>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Pickup %</span>
+                    <span class="metric-value">${totalOrders > 0 ? (pickupCount/totalOrders*100).toFixed(0) : 0}%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Avg pickup order</span>
+                    <span class="metric-value">$${pickupCount > 0 ? (pickupRevenue/pickupCount).toFixed(2) : '0.00'}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Avg walk-in order</span>
+                    <span class="metric-value">$${walkinCount > 0 ? (walkinRevenue/walkinCount).toFixed(2) : '0.00'}</span>
+                </div>
+            </div>
+
+            <!-- Top Items -->
+            <div class="report-section">
+                <h3>🏆 Top Items</h3>
+                <div class="bar-chart">
+                    ${topItems.map(([name, count]) => `
+                        <div class="bar-row">
+                            <div class="bar-label">${name}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width:${Math.max(5, count/maxItemCount*100)}%;background:var(--green);">
+                                    ${count}
+                                </div>
+                            </div>
+                            <div class="bar-value">${count} items</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Pipeline -->
+        <div class="report-section">
+            <h3>📋 Order Pipeline</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${STATUSES.map(s => `
+                    <div style="flex:1;min-width:100px;text-align:center;padding:12px;background:${s==='complete'?'var(--green-pale)':'#f8f9fa'};border-radius:10px;">
+                        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${statusCounts[s]}</div>
+                        <div style="font-size:11px;color:var(--text-light);">${STATUS_LABELS[s]}</div>
+                    </div>
+                `).join('<div style="display:flex;align-items:center;color:#ccc;">→</div>')}
+            </div>
+        </div>
+    `;
+}
+
 function switchView(view) {
     document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('kanbanView').style.display = 'none';
+    document.getElementById('tableView').style.display = 'none';
+    document.getElementById('reportsView').style.display = 'none';
     if (view === 'kanban') {
         document.getElementById('kanbanView').style.display = 'grid';
-        document.getElementById('tableView').style.display = 'none';
         document.querySelectorAll('.view-tab')[0].classList.add('active');
-    } else {
-        document.getElementById('kanbanView').style.display = 'none';
+    } else if (view === 'table') {
         document.getElementById('tableView').style.display = 'block';
         document.querySelectorAll('.view-tab')[1].classList.add('active');
+    } else if (view === 'reports') {
+        document.getElementById('reportsView').style.display = 'block';
+        document.querySelectorAll('.view-tab')[2].classList.add('active');
+        renderReports();
     }
 }
 
