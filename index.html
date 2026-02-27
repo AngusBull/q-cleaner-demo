@@ -790,8 +790,8 @@
                             </select>
                         </div>
                         <div style="background:var(--plum-pale);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
-                            <div style="font-size:14px;color:var(--plum-dark);"><strong>🚗 Pickup:</strong> 9–11 AM &nbsp;|&nbsp; <strong>📦 Delivery:</strong> 3–5 PM</div>
-                            <div style="font-size:12px;color:var(--text-light);margin-top:4px;">Mon–Sat. Leave your garment bag on the porch — Kim will handle the rest.</div>
+                            <div style="font-size:14px;color:var(--plum-dark);"><strong>🚗 Pickup & Delivery:</strong> 9–11 AM, Mon–Sat</div>
+                            <div style="font-size:12px;color:var(--text-light);margin-top:4px;">Leave your garment bag on the porch — Kim picks up and delivers back on her route, usually within 48 hours.</div>
                         </div>
                         <div class="form-group" style="display:flex;align-items:center;gap:8px;">
                             <input type="checkbox" id="smsOpt" checked style="width:auto;">
@@ -959,7 +959,7 @@
             <div style="font-size:14px;color:var(--text-light);">
                 1. You'll get a confirmation text shortly<br>
                 2. Leave your garment bag on the porch by 9 AM<br>
-                3. Kim picks up 9–11 AM, delivers back 3–5 PM within 48 hours!
+                3. Kim picks up 9–11 AM, delivers back within 48 hours!
             </div>
         </div>
         <p style="font-size:14px;color:var(--text-light);">For anything urgent, call Kim at <a href="tel:9784077554" style="color:var(--plum);font-weight:600;">978-407-7554</a>.</p>
@@ -1033,7 +1033,6 @@
             data.address = inputs[0] ? inputs[0].value : '';
             data.pickupDay = inputs[1] ? inputs[1].value : '';
             data.pickupTime = '9 AM – 11 AM';
-            data.deliveryTime = '3 PM – 5 PM';
             data.sms = document.getElementById('smsOpt') ? document.getElementById('smsOpt').checked : true;
         }
         // Build confirmation SMS (sent via Twilio when enabled)
@@ -1041,7 +1040,7 @@
         const itemCount = data.items.reduce((s, it) => s + it.qty, 0);
         const itemList = data.itemsSummary || data.items.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
         if (data.type === 'pickup') {
-            data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. Pickup: ${data.pickupDay || 'TBD'} 9–11 AM. Leave your garment bag on the porch — Kim will handle the rest! Delivery back by 3–5 PM within 48hrs. Questions? Call 978-407-7554`;
+            data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. Pickup: ${data.pickupDay || 'TBD'} 9–11 AM. Leave your garment bag on the porch — Kim will handle the rest! Delivered back within 48hrs. Questions? Call 978-407-7554`;
         } else {
             data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. We'll text you when it's ready for pickup at 159A Great Rd, Acton. Questions? Call 978-407-7554`;
         }
