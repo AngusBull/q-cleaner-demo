@@ -680,6 +680,16 @@ function loadSmsLog() {
 let orders = loadOrders();
 let smsLog = loadSmsLog();
 let nextId = Math.max(...orders.map(o => o.id)) + 1;
+let ticketCounter = parseInt(localStorage.getItem('qc_ticketCounter') || '0');
+function getTicketNum(order) {
+    if (order.ticketNum) return order.ticketNum;
+    ticketCounter++;
+    order.ticketNum = ticketCounter;
+    localStorage.setItem('qc_ticketCounter', String(ticketCounter));
+    return order.ticketNum;
+}
+// Assign ticket numbers to existing orders
+orders.forEach(o => { if (!o.ticketNum) getTicketNum(o); });
 
 function save() {
     localStorage.setItem('q_orders', JSON.stringify(orders));
@@ -768,7 +778,7 @@ function renderKanban() {
         const cards = statusOrders.map(o => status === 'complete' ? `
             <div class="order-card" style="opacity:0.8;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div class="order-name" style="margin:0;">${o.name}</div>
+                    <div class="order-name" style="margin:0;"><span style="color:#aaa;font-weight:400;font-size:11px;">#${String(o.ticketNum||0).padStart(4,'0')}</span> ${o.name}</div>
                     <span class="order-price" style="font-size:15px;">${o.price || '—'}</span>
                 </div>
                 <div class="order-meta">${timeAgo(o.created)}${(o.paymentStatus === 'charged' || o.paymentStatus === 'paid-in-store') ? ' · ✅ Paid' : ''}</div>
@@ -778,7 +788,7 @@ function renderKanban() {
             </div>
         ` : `
             <div class="order-card ${o.type === 'pickup' ? 'is-pickup' : ''} ${o.priority === 'rush' ? 'is-rush' : ''}">
-                <div class="order-name">${o.name}${o.priority === 'rush' ? ' ⚡' : ''}</div>
+                <div class="order-name"><span style="color:#aaa;font-weight:400;font-size:11px;">#${String(o.ticketNum||0).padStart(4,'0')}</span> ${o.name}${o.priority === 'rush' ? ' ⚡' : ''}</div>
                 ${o.address ? `<div class="order-address">📍 ${o.address}</div>` : ''}
                 <div class="order-meta">${o.type === 'pickup' && o.pickupDay ? o.pickupDay + ' ' + (o.pickupTime || '') : timeAgo(o.created)}</div>
                 <div class="order-items">${(function(){
@@ -816,7 +826,7 @@ function renderKanban() {
 function renderTable() {
     const rows = activeOrders().map(o => `
         <tr>
-            <td><strong>${o.name}</strong>${o.address ? `<br><span style="font-size:11px;color:var(--text-light)">${o.address}</span>` : ''}</td>
+            <td><span style="color:#aaa;font-size:11px;">#${String(o.ticketNum||0).padStart(4,'0')}</span> <strong>${o.name}</strong>${o.address ? `<br><span style="font-size:11px;color:var(--text-light)">${o.address}</span>` : ''}</td>
             <td>${o.phone}</td>
             <td><span class="order-type ${o.type === 'pickup' ? 'type-pickup' : 'type-walkin'}">${o.type === 'pickup' ? '🚗 Pickup' : 'Walk-in'}</span></td>
             <td>${o.items || o.itemsSummary || '—'}</td>
@@ -909,7 +919,9 @@ function createOrder(e) {
         notes: document.getElementById('o_notes').value,
         due: document.getElementById('o_due').value,
         created: new Date().toISOString(),
+        ticketNum: ++ticketCounter,
     };
+    localStorage.setItem('qc_ticketCounter', String(ticketCounter));
     // Parse numeric total from price string (e.g. "$45.00" → 45.00)
     const priceStr = order.price.replace(/[^0-9.]/g, '');
     const priceNum = parseFloat(priceStr) || 0;
@@ -1046,7 +1058,7 @@ function renderArchived() {
 function showDetail(id) {
     const o = orders.find(x => String(x.id) === String(id));
     if (!o) return;
-    document.getElementById('detail_title').textContent = o.name;
+    document.getElementById('detail_title').innerHTML = '<span style="color:#aaa;font-weight:400;font-size:14px;">#' + String(o.ticketNum||0).padStart(4,'0') + '</span> ' + o.name;
     document.getElementById('detailContent').innerHTML = `
         <div class="detail-grid">
             <div class="detail-section"><div class="detail-label">Phone</div><div class="detail-value"><a href="tel:${o.phone}">${o.phone}</a></div></div>
