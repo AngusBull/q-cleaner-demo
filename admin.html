@@ -715,7 +715,18 @@ function renderKanban() {
                 showMoreBtn = `<button onclick="toggleComplete()" style="width:100%;padding:10px;border:1px dashed #ccc;border-radius:8px;background:none;color:var(--text-light);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px;">Show less</button>`;
             }
         }
-        const cards = statusOrders.map(o => `
+        const cards = statusOrders.map(o => status === 'complete' ? `
+            <div class="order-card" style="opacity:0.8;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="order-name" style="margin:0;">${o.name}</div>
+                    <span class="order-price" style="font-size:15px;">${o.price || '—'}</span>
+                </div>
+                <div class="order-meta">${timeAgo(o.created)}${o.paymentStatus === 'charged' ? ' · ✅ Paid' : ''}</div>
+                <div class="order-actions">
+                    <button class="order-btn" onclick="showDetail('${o.id}')">Details</button>
+                </div>
+            </div>
+        ` : `
             <div class="order-card ${o.type === 'pickup' ? 'is-pickup' : ''} ${o.priority === 'rush' ? 'is-rush' : ''}">
                 <div class="order-name">${o.name}${o.priority === 'rush' ? ' ⚡' : ''}</div>
                 ${o.address ? `<div class="order-address">📍 ${o.address}</div>` : ''}
@@ -730,7 +741,7 @@ function renderKanban() {
                     <span class="order-price">${o.price || '—'}</span>
                 </div>
                 <div class="order-actions">
-                    ${status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder('${o.id}')">→ ${STATUS_LABELS[STATUSES[STATUSES.indexOf(status) + 1]] || 'Done'}</button>` : ''}
+                    <button class="order-btn advance" onclick="advanceOrder('${o.id}')">→ ${STATUS_LABELS[STATUSES[STATUSES.indexOf(status) + 1]] || 'Done'}</button>
                     <button class="order-btn" onclick="showDetail('${o.id}')">Details</button>
                     ${o.sms && status !== 'complete' ? `<button class="order-btn" onclick="quickText('${o.id}')">📱</button>` : ''}
                     ${status !== 'complete' ? `<button class="order-btn danger" onclick="deleteOrder('${o.id}')">✕</button>` : ''}
