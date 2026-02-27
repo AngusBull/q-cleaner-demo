@@ -1027,7 +1027,7 @@ function renderArchived() {
 }
 
 function showDetail(id) {
-    const o = orders.find(x => x.id === id);
+    const o = orders.find(x => String(x.id) === String(id));
     if (!o) return;
     document.getElementById('detail_title').textContent = o.name;
     document.getElementById('detailContent').innerHTML = `
