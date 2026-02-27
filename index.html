@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q Cleaner & Tailor | Acton MA | Voted #1 Dry Cleaner & Tailor</title>
+    <meta name="description" content="Voted #1 dry cleaner & tailor in Acton, MA. Personalized service by Kim. Expert alterations, wedding gowns, dry cleaning. 159A Great Road, Acton.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --plum: #2D6B4F;
+            --plum-light: #3D8B6C;
+            --plum-pale: #E6F5ED;
+            --plum-dark: #1A4232;
+            --cream: #FFFBF5;
+            --warm: #FFF8F0;
+            --gold: #D4A843;
+            --gold-light: #F5E6B8;
+            --text: #2A2A2A;
+            --text-light: #666;
+            --white: #FFFFFF;
+            --shadow: 0 2px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: var(--cream);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        nav.scrolled { box-shadow: var(--shadow); }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 24px;
+        }
+        .nav-logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--plum-dark);
+        }
+        .nav-logo-q {
+            width: 42px; height: 42px; background: var(--plum);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; color: white;
+            font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700;
+        }
+        .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 18px; }
+        .nav-links { display: flex; gap: 28px; align-items: center; }
+        .nav-links a {
+            text-decoration: none; color: var(--text-light);
+            font-size: 14px; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--plum); }
+        .nav-cta {
+            background: var(--plum) !important; color: white !important;
+            padding: 10px 20px !important; border-radius: 8px !important;
+            font-weight: 600 !important;
+        }
+        .nav-cta:hover { background: var(--plum-dark) !important; }
+        .mobile-menu { display: none; background: none; border: none; font-size: 28px; cursor: pointer; }
+        .nav-mobile { display: none; }
+
+        /* HERO */
+        .hero {
+            padding: 130px 24px 100px;
+            background: linear-gradient(135deg, var(--plum-dark) 0%, var(--plum) 60%, var(--plum-light) 100%);
+            color: white;
+            position: relative; overflow: hidden;
+            text-align: center;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(212,168,67,0.15) 0%, transparent 60%);
+        }
+        .hero::after {
+            content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+            height: 60px; background: var(--cream);
+            clip-path: ellipse(55% 100% at 50% 100%);
+        }
+        .hero-inner { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+        .hero-award {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(212,168,67,0.25); border: 1px solid rgba(212,168,67,0.4);
+            padding: 8px 20px; border-radius: 100px; font-size: 14px;
+            font-weight: 500; margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 52px; line-height: 1.15; margin-bottom: 20px;
+        }
+        .hero p { font-size: 19px; opacity: 0.9; margin-bottom: 36px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 28px; border-radius: 10px; font-size: 16px;
+            font-weight: 600; text-decoration: none; transition: all 0.2s;
+            cursor: pointer; border: none; font-family: inherit;
+        }
+        .btn-white { background: white; color: var(--plum-dark); }
+        .btn-white:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn-outline { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.4); }
+        .btn-outline:hover { border-color: white; background: rgba(255,255,255,0.1); }
+        .btn-plum { background: var(--plum); color: white; }
+        .btn-plum:hover { background: var(--plum-dark); transform: translateY(-2px); }
+        .btn-gold { background: var(--gold); color: white; }
+        .btn-gold:hover { background: #c09a3a; transform: translateY(-2px); }
+
+        .hero-stats {
+            display: flex; justify-content: center; gap: 48px; margin-top: 48px;
+            padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.15);
+        }
+        .hero-stat { text-align: center; }
+        .hero-stat-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
+        .hero-stat-label { font-size: 13px; opacity: 0.7; margin-top: 2px; }
+
+        /* SECTIONS */
+        section { padding: 80px 24px; }
+        .section-inner { max-width: 1100px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 56px; }
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px; margin-bottom: 14px; color: var(--plum-dark);
+        }
+        .section-header p { font-size: 17px; color: var(--text-light); max-width: 560px; margin: 0 auto; }
+        .section-tag {
+            display: inline-block; background: var(--plum-pale);
+            color: var(--plum); padding: 6px 16px; border-radius: 100px;
+            font-size: 12px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; margin-bottom: 16px;
+        }
+
+        /* MEET KIM */
+        .kim-section { background: white; }
+        .kim-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; }
+        .kim-visual {
+            background: linear-gradient(135deg, var(--plum-pale), var(--gold-light));
+            border-radius: 20px; padding: 48px; text-align: center;
+        }
+        .kim-avatar {
+            width: 160px; height: 160px; background: var(--plum);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 56px; margin: 0 auto 20px;
+            border: 4px solid white; box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .kim-avatar img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+            margin-top: 32px;
+        }
+        .photo-grid img {
+            width: 100%; height: 180px; object-fit: cover;
+            border-radius: 10px; box-shadow: var(--shadow);
+        }
+        .kim-quote {
+            font-family: 'Playfair Display', serif; font-size: 20px;
+            font-style: italic; color: var(--plum-dark); line-height: 1.5;
+        }
+        .kim-content h2 { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--plum-dark); margin-bottom: 16px; }
+        .kim-content p { color: var(--text-light); font-size: 16px; margin-bottom: 16px; line-height: 1.8; }
+        .kim-badges { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        .kim-badge {
+            background: var(--gold-light); color: var(--plum-dark);
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        /* SERVICES */
+        .services-section { background: var(--cream); }
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .service-card {
+            background: white; padding: 32px; border-radius: var(--radius);
+            box-shadow: var(--shadow); transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .service-card:hover { border-color: var(--plum-pale); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .service-card.featured { border: 2px solid var(--gold); position: relative; }
+        .service-featured-tag {
+            position: absolute; top: -10px; right: 16px;
+            background: var(--gold); color: white; padding: 3px 12px;
+            border-radius: 6px; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .service-icon { font-size: 32px; margin-bottom: 16px; }
+        .service-card h3 { font-size: 18px; margin-bottom: 8px; color: var(--plum-dark); }
+        .service-card p { color: var(--text-light); font-size: 14px; line-height: 1.7; }
+        .service-price { color: var(--plum); font-weight: 600; margin-top: 12px; font-size: 15px; }
+
+        /* SPECIALTY: WEDDINGS */
+        .wedding-section { background: white; }
+        .wedding-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; }
+        .wedding-content h2 { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--plum-dark); margin-bottom: 16px; }
+        .wedding-content p { color: var(--text-light); font-size: 16px; margin-bottom: 20px; line-height: 1.8; }
+        .wedding-list { list-style: none; margin-bottom: 28px; }
+        .wedding-list li {
+            padding: 10px 0; font-size: 15px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .wedding-list li:last-child { border-bottom: none; }
+        .wedding-list li::before { content: '✓'; color: var(--plum); font-weight: 700; font-size: 18px; }
+        .wedding-visual {
+            background: linear-gradient(135deg, var(--plum-pale), #D4EDDA);
+            border-radius: 20px; padding: 48px; text-align: center;
+        }
+        .wedding-visual-icon { font-size: 80px; margin-bottom: 16px; }
+        .wedding-visual h3 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--plum-dark); margin-bottom: 8px; }
+        .wedding-visual p { color: var(--text-light); font-size: 15px; }
+
+        /* CUSTOM CREATIONS */
+        .custom-section {
+            background: linear-gradient(135deg, var(--plum-pale), var(--gold-light));
+        }
+        .custom-inner { max-width: 800px; margin: 0 auto; text-align: center; }
+        .custom-inner h2 { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--plum-dark); margin-bottom: 16px; }
+        .custom-inner p { font-size: 17px; color: var(--text-light); margin-bottom: 32px; line-height: 1.8; }
+        .custom-examples { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+        .custom-example {
+            background: white; border-radius: 12px; padding: 24px 28px;
+            box-shadow: var(--shadow); text-align: center; min-width: 180px;
+        }
+        .custom-example-icon { font-size: 36px; margin-bottom: 8px; }
+        .custom-example h4 { font-size: 15px; color: var(--plum-dark); }
+        .custom-example p { font-size: 13px; color: var(--text-light); }
+
+        /* REVIEWS */
+        .reviews-section { background: var(--plum-dark); color: white; }
+        .reviews-section .section-header h2 { color: white; }
+        .reviews-section .section-header p { color: rgba(255,255,255,0.7); }
+        .reviews-section .section-tag { background: rgba(255,255,255,0.1); color: var(--plum-pale); }
+        .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .review-card {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 28px;
+        }
+        .review-stars { color: var(--gold); font-size: 18px; margin-bottom: 12px; }
+        .review-text { font-size: 15px; opacity: 0.9; margin-bottom: 16px; line-height: 1.7; }
+        .review-author { font-weight: 600; font-size: 14px; }
+        .review-source { font-size: 12px; opacity: 0.5; }
+
+        /* PRICING TABLE */
+        .pricing-section { background: white; }
+        .price-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 900px; margin: 0 auto; }
+        .price-table {
+            background: var(--cream); border-radius: 16px;
+            overflow: hidden; box-shadow: var(--shadow);
+        }
+        .price-table-header {
+            background: var(--plum); color: white;
+            padding: 16px 24px; font-weight: 600; font-size: 16px;
+        }
+        .price-table table { width: 100%; border-collapse: collapse; }
+        .price-table td { padding: 12px 24px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .price-table tr:last-child td { border-bottom: none; }
+        .price-table tr:hover td { background: var(--plum-pale); }
+        .price-table td:last-child { text-align: right; font-weight: 600; color: var(--plum-dark); }
+
+        /* CONTACT / VISIT */
+        .contact-section { background: var(--cream); }
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+        .contact-form { background: white; border-radius: 16px; padding: 36px; box-shadow: var(--shadow); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px 16px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 15px; font-family: inherit;
+            transition: border-color 0.2s; background: white;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--plum);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+
+        /* ITEM PICKER */
+        .item-picker { border: 1px solid #ddd; border-radius: 12px; overflow: hidden; }
+        .item-picker-header { display: flex; gap: 8px; padding: 12px 16px; background: var(--cream); border-bottom: 1px solid #eee; }
+        .item-picker-header select { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; background: white; }
+        .item-picker-header .btn-add-item { background: var(--plum); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .item-picker-header .btn-add-item:hover { opacity: 0.9; }
+        .item-list { max-height: 240px; overflow-y: auto; }
+        .item-list:empty::after { content: 'Add items above ↑'; display: block; text-align: center; padding: 24px; color: #aaa; font-size: 14px; }
+        .item-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid #f0f0f0; }
+        .item-row:last-child { border-bottom: none; }
+        .item-name { flex: 1; font-size: 14px; font-weight: 500; }
+        .item-service { font-size: 12px; color: var(--text-light); background: var(--plum-pale); padding: 2px 8px; border-radius: 4px; }
+        .item-qty { display: flex; align-items: center; gap: 0; }
+        .item-qty button { width: 28px; height: 28px; border: 1px solid #ddd; background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .item-qty button:first-child { border-radius: 6px 0 0 6px; }
+        .item-qty button:last-child { border-radius: 0 6px 6px 0; }
+        .item-qty span { width: 32px; height: 28px; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+        .item-remove { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 0 4px; }
+        .item-remove:hover { color: #e74c3c; }
+        .item-note-input { width: 100%; border: none; border-top: 1px solid #f0f0f0; padding: 6px 16px; font-size: 12px; color: var(--text-light); font-family: inherit; }
+        .item-note-input:focus { outline: none; background: #fafafa; }
+        .item-picker-footer { padding: 10px 16px; background: var(--cream); border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .item-picker-footer .total { font-weight: 700; color: var(--plum-dark); }
+
+        .contact-info h3 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--plum-dark); margin-bottom: 24px; }
+        .contact-item { display: flex; gap: 16px; margin-bottom: 24px; }
+        .contact-icon {
+            width: 48px; height: 48px; min-width: 48px;
+            background: var(--plum-pale); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .contact-text h4 { font-size: 15px; margin-bottom: 2px; color: var(--plum-dark); }
+        .contact-text p { color: var(--text-light); font-size: 14px; }
+        .contact-text a { color: var(--plum); text-decoration: none; }
+
+        .payment-methods {
+            background: var(--warm); border-radius: 10px; padding: 16px 20px;
+            margin-top: 24px;
+        }
+        .payment-methods h4 { font-size: 14px; margin-bottom: 8px; color: var(--plum-dark); }
+        .payment-icons { display: flex; gap: 12px; font-size: 24px; }
+
+        /* FOOTER */
+        footer { background: var(--plum-dark); color: white; padding: 48px 24px 24px; }
+        .footer-inner { max-width: 1100px; margin: 0 auto; }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; margin-bottom: 32px; }
+        .footer-brand h3 { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 12px; }
+        .footer-brand p { opacity: 0.7; font-size: 14px; line-height: 1.7; }
+        .footer-col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; opacity: 0.5; }
+        .footer-col a { display: block; color: white; text-decoration: none; font-size: 14px; padding: 4px 0; opacity: 0.8; }
+        .footer-col a:hover { opacity: 1; }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; font-size: 13px; opacity: 0.5; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 2000; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; border-radius: 20px; padding: 40px;
+            max-width: 460px; width: 90%; box-shadow: var(--shadow-lg);
+        }
+        .modal h2 { font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 8px; color: var(--plum-dark); }
+        .modal p { color: var(--text-light); margin-bottom: 20px; }
+        .modal .btn { width: 100%; justify-content: center; }
+        .modal-close { float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .mobile-menu { display: block; }
+            .nav-mobile.active {
+                display: flex; flex-direction: column;
+                position: absolute; top: 100%; left: 0; right: 0;
+                background: white; box-shadow: var(--shadow);
+            }
+            .nav-mobile a { display: block; padding: 16px 24px; text-decoration: none; color: var(--text); border-bottom: 1px solid #f0f0f0; }
+            .hero { padding: 120px 24px 80px; }
+            .hero h1 { font-size: 34px; }
+            .hero-stats { flex-direction: row; gap: 24px; }
+            .hero-stat-num { font-size: 24px; }
+            .kim-grid, .wedding-grid, .contact-grid { grid-template-columns: 1fr; }
+            #pickup > div > div:first-child { grid-template-columns: 1fr !important; }
+            #pickup > div > div:first-child > div:last-child { display: none; }
+            .kim-visual { order: -1; }
+            .services-grid { grid-template-columns: 1fr; }
+            .reviews-grid { grid-template-columns: 1fr; }
+            .price-columns { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .custom-examples { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+    <div class="nav-inner">
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-q" style="overflow:hidden;padding:0;"><img src="img/photo_05.jpg" alt="Q logo" style="width:100%;height:100%;object-fit:contain;"></div>
+            <span class="nav-logo-text">Cleaner & Tailor</span>
+        </a>
+        <div class="nav-links">
+            <a href="#services">Services</a>
+            <a href="#pickup">Pickup & Delivery</a>
+            <a href="#weddings">Weddings</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#reviews">Reviews</a>
+            <a href="tel:9784077554">978-407-7554</a>
+            <a href="#contact" class="nav-cta">Schedule Pickup</a>
+        </div>
+        <button class="mobile-menu" onclick="toggleMobile()">☰</button>
+    </div>
+    <div class="nav-mobile" id="mobileMenu">
+        <a href="#services" onclick="toggleMobile()">Services</a>
+        <a href="#pickup" onclick="toggleMobile()">Pickup & Delivery</a>
+        <a href="#weddings" onclick="toggleMobile()">Weddings & Prom</a>
+        <a href="#pricing" onclick="toggleMobile()">Pricing</a>
+        <a href="#reviews" onclick="toggleMobile()">Reviews</a>
+        <a href="tel:9784077554">Call Kim: 978-407-7554</a>
+        <a href="#contact" onclick="toggleMobile()" style="background:var(--plum);color:white;font-weight:600;">Schedule Pickup →</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-award">🏆 Voted #1 Dry Cleaner & Tailor in Acton — 4 years running</div>
+        <h1>Where your clothes get the personal touch.</h1>
+        <p>Not a chain. Not a franchise. Just Kim — and 15+ years of making your clothes look their absolute best. Now with free pickup & delivery.</p>
+        <div class="hero-buttons">
+            <a href="#contact" class="btn btn-white">Schedule Free Pickup →</a>
+            <a href="tel:9784077554" class="btn btn-outline">📞 Call Kim</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-num">🏆 #1</div>
+                <div class="hero-stat-label">Voted Best in Acton</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">15+</div>
+                <div class="hero-stat-label">Years of experience</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">⭐ 5.0</div>
+                <div class="hero-stat-label">Yelp rating</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MEET KIM -->
+<section class="kim-section">
+    <div class="section-inner">
+        <div class="kim-grid">
+            <div class="kim-visual">
+                <div class="kim-avatar">
+                    <img src="img/photo_01.jpg" alt="Kim at Q Cleaner & Tailor">
+                </div>
+                <div class="kim-quote">"Every garment tells a story. My job is to keep that story going — whether it's your everyday work shirt or your grandmother's wedding dress."</div>
+                <p style="margin-top:16px;font-weight:600;color:var(--plum);">— Kim Walsh, Owner</p>
+                <div class="photo-grid" style="margin-top:24px;">
+                    <img src="img/photo_03.jpg" alt="Kim with eco-friendly garment bag">
+                    <img src="img/photo_07.jpg" alt="Kim with formal dress">
+                    <img src="img/photo_02.jpg" alt="Q Cleaner & Tailor storefront">
+                </div>
+            </div>
+            <div class="kim-content">
+                <span class="section-tag">Meet Your Tailor</span>
+                <h2>Hi, I'm Kim.</h2>
+                <p>When you walk into Q Cleaner & Tailor, you're not handing your clothes to a stranger. You're handing them to me — and I treat every piece like it's my own.</p>
+                <p>I've been doing this for over 15 years. I know fabrics, I know fits, and I know that your favorite jacket isn't just a jacket. That's why I offer truly personalized service — I remember your preferences, your sizing, and what matters to you.</p>
+                <p>Whether it's a last-minute hem before a wedding, a perfect taper on your work pants, or getting that impossible stain out — I've got you.</p>
+                <div class="kim-badges">
+                    <span class="kim-badge">🏆 Yelp "People Love Us" 2025</span>
+                    <span class="kim-badge">🥇 #1 Gold — Middlesex West</span>
+                    <span class="kim-badge">🌱 Eco-friendly cleaning</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services-section" id="services">
+    <div class="section-inner">
+        <div class="section-header">
+            <span class="section-tag">Services</span>
+            <h2>Everything your wardrobe needs</h2>
+            <p>From everyday dry cleaning to expert alterations — all under one roof, with one person you trust.</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">👔</div>
+                <h3>Dry Cleaning</h3>
+                <p>Professional cleaning for suits, dresses, coats, and delicates. Eco-friendly process that's gentle on fabrics and the environment.</p>
+                <div class="service-price">From $6.99</div>
+            </div>
+            <div class="service-card featured">
+                <div class="service-featured-tag">Kim's Specialty</div>
+                <div class="service-icon">✂️</div>
+                <h3>Expert Alterations</h3>
+                <p>Hems, tapering, taking in, letting out, zippers, buttons — Kim's precise hand makes every garment fit like it was made for you.</p>
+                <div class="service-price">From $12</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">👗</div>
+                <h3>Wedding & Prom</h3>
+                <p>Bridal gown alterations, bridesmaid dresses, tux fitting, and heirloom preservation. Kim's specialty for over a decade.</p>
+                <div class="service-price">Call for quote</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">👞</div>
+                <h3>Shoe & Boot Repair</h3>
+                <p>Resoling, cleaning, conditioning — bring your favorite shoes back to life. Handbag repair too.</p>
+                <div class="service-price">From $15</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🏠</div>
+                <h3>Household Items</h3>
+                <p>Curtains, quilts, comforters, table linens, and rugs. If it's fabric, Kim can clean it.</p>
+                <div class="service-price">From $15</div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🧺</div>
+                <h3>Wash & Fold</h3>
+                <p>Drop off your everyday laundry and pick it up fresh, clean, and folded. Easy.</p>
+                <div class="service-price">$2.49/lb</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- WEDDINGS & PROM -->
+<section class="wedding-section" id="weddings">
+    <div class="section-inner">
+        <div class="wedding-grid">
+            <div class="wedding-content">
+                <span class="section-tag">Specialty</span>
+                <h2>Weddings & Prom — Kim's passion</h2>
+                <p>Your dress is more than fabric — it's the centerpiece of the biggest day of your life. Kim has altered hundreds of wedding gowns, bridesmaid dresses, and prom outfits with the precision and care they deserve.</p>
+                <ul class="wedding-list">
+                    <li>Bridal gown alterations & fitting</li>
+                    <li>Bridesmaid & flower girl dresses</li>
+                    <li>Tuxedo & dress suit alterations</li>
+                    <li>Prom dress fitting & adjustments</li>
+                    <li>Mother-of-bride / groom attire</li>
+                    <li>Heirloom gown preservation & cleaning</li>
+                    <li>Day-of emergency repairs</li>
+                </ul>
+                <a href="tel:9784077554" class="btn btn-plum">Call Kim for a Fitting →</a>
+            </div>
+            <div class="wedding-visual">
+                <img src="img/photo_07.jpg" alt="Kim with formal gown and wedding dress" style="width:100%;border-radius:12px;margin-bottom:16px;box-shadow:var(--shadow);">
+                <h3>Book your bridal fitting</h3>
+                <p>Call Kim at <a href="tel:9784077554" style="color:var(--plum);font-weight:600;">978-407-7554</a> to schedule your appointment. Allow 4-6 weeks before the big day for best results.</p>
+                <div style="margin-top:24px;background:white;border-radius:12px;padding:20px;text-align:left;">
+                    <div style="font-weight:600;color:var(--plum-dark);margin-bottom:8px;">💡 Pro tip from Kim:</div>
+                    <div style="font-size:14px;color:var(--text-light);line-height:1.7;">"Bring your shoes and undergarments to your fitting — it makes all the difference in getting the perfect hem length and fit."</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PICKUP & DELIVERY -->
+<section class="pickup-section" id="pickup" style="background:var(--cream);">
+    <div class="section-inner">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
+            <div>
+                <span class="section-tag">New Service</span>
+                <h2 style="font-family:'Playfair Display',serif;font-size:36px;color:var(--plum-dark);margin-bottom:16px;">
+                    Pickup & Delivery.<br>On your schedule.
+                </h2>
+                <p style="color:var(--text-light);font-size:16px;margin-bottom:32px;line-height:1.8;">
+                    Too busy to stop by? Kim will come to you. Schedule a pickup online, leave your garments on the porch, and they'll come back cleaned, pressed, and ready to wear. Same personal care — just delivered to your door.
+                </p>
+                <div style="display:flex;flex-direction:column;gap:20px;">
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <div style="width:44px;height:44px;min-width:44px;background:var(--plum);color:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">1</div>
+                        <div>
+                            <h4 style="font-size:16px;margin-bottom:2px;">Schedule online</h4>
+                            <p style="color:var(--text-light);font-size:14px;">Pick your day and time. Takes 30 seconds.</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <div style="width:44px;height:44px;min-width:44px;background:var(--plum);color:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">2</div>
+                        <div>
+                            <h4 style="font-size:16px;margin-bottom:2px;">Leave your bag out</h4>
+                            <p style="color:var(--text-light);font-size:14px;">We'll text you a reminder. Hang it on the door or leave it on the porch.</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <div style="width:44px;height:44px;min-width:44px;background:var(--plum);color:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">3</div>
+                        <div>
+                            <h4 style="font-size:16px;margin-bottom:2px;">Kim cleans & delivers</h4>
+                            <p style="color:var(--text-light);font-size:14px;">Text updates at every step. Delivered back in 48 hours.</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="#contact" class="btn btn-plum" style="margin-top:28px;">Schedule a Pickup →</a>
+            </div>
+            <div style="background:linear-gradient(135deg,var(--plum-pale),var(--gold-light));border-radius:20px;padding:40px;">
+                <div style="background:white;border-radius:20px;padding:20px;box-shadow:var(--shadow-lg);max-width:300px;margin:0 auto;">
+                    <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid #eee;margin-bottom:14px;">
+                        <div style="width:36px;height:36px;background:var(--plum);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;">Q</div>
+                        <div>
+                            <div style="font-weight:600;font-size:14px;">Q Cleaner & Tailor</div>
+                            <div style="font-size:11px;color:var(--text-light);">Text Updates</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--plum);color:white;padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:13px;margin-bottom:8px;max-width:85%;">
+                        Hi! 👋 Reminder: leave your garment bag out by 9 AM tomorrow. Kim will swing by between 9-11 AM.
+                    </div>
+                    <div style="background:#E9ECEF;padding:10px 14px;border-radius:14px 14px 14px 4px;font-size:13px;margin-bottom:8px;max-width:75%;margin-left:auto;">
+                        It's on the porch! 👍
+                    </div>
+                    <div style="background:var(--plum);color:white;padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:13px;margin-bottom:8px;max-width:85%;">
+                        Picked up! 🧺 2 suits, 3 shirts, 1 dress. Kim says she'll have them ready Thursday.
+                    </div>
+                    <div style="background:var(--plum);color:white;padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:13px;margin-bottom:8px;max-width:85%;">
+                        Your order is ready! ✨ Delivering Thursday between 4-6 PM.
+                    </div>
+                    <div style="background:var(--plum);color:white;padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:13px;margin-bottom:4px;max-width:85%;">
+                        Delivered! Hanging on your front door. Have a great weekend! 💚
+                    </div>
+                    <div style="font-size:10px;color:#999;text-align:right;">Today, 4:32 PM</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:40px;background:var(--plum-pale);border-radius:12px;padding:20px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <span style="font-size:24px;">🚗</span>
+            <div style="flex:1;">
+                <strong style="color:var(--plum-dark);">Free pickup & delivery</strong> on orders over $30. Serving Acton, Concord, Sudbury, Maynard, and Littleton.
+            </div>
+            <span style="color:var(--text-light);font-size:14px;">$5.99 delivery fee on orders under $30</span>
+        </div>
+    </div>
+</section>
+
+<!-- CUSTOM CREATIONS -->
+<section class="custom-section">
+    <div class="section-inner">
+        <div class="custom-inner">
+            <span class="section-tag">Something Special</span>
+            <h2>Custom creations by Kim</h2>
+            <p>Looking for a unique gift? Kim can transform your favorite garments into something new. A cherished shirt becomes a keepsake pillow. Mom's favorite slacks become a beautiful scarf.</p>
+            <div class="custom-examples">
+                <div class="custom-example">
+                    <div class="custom-example-icon">👕→🛋️</div>
+                    <h4>Shirt to Pillow</h4>
+                    <p>Keepsake from a loved one's favorite shirt</p>
+                </div>
+                <div class="custom-example">
+                    <div class="custom-example-icon">👖→🧣</div>
+                    <h4>Slacks to Scarf</h4>
+                    <p>Transform fabric into wearable memories</p>
+                </div>
+                <div class="custom-example">
+                    <div class="custom-example-icon">💡→✨</div>
+                    <h4>Your Idea Here</h4>
+                    <p>Call Kim with your next project</p>
+                </div>
+            </div>
+            <img src="img/photo_01.jpg" alt="Kim with custom pillow" style="width:240px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:24px;">
+            <br>
+            <a href="tel:9784077554" class="btn btn-plum">Call Kim About a Custom Project →</a>
+        </div>
+    </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+    <div class="section-inner">
+        <div class="section-header">
+            <span class="section-tag">Pricing</span>
+            <h2>Fair prices. Quality work.</h2>
+            <p>No hidden fees. Kim will always confirm the price before starting any work.</p>
+        </div>
+        <div class="price-columns">
+            <div class="price-table">
+                <div class="price-table-header">👔 Dry Cleaning</div>
+                <table>
+                    <tr><td>Dress Shirt (laundered)</td><td>$3.99</td></tr>
+                    <tr><td>Pants / Trousers</td><td>$6.99</td></tr>
+                    <tr><td>Suit (2-piece)</td><td>$14.99</td></tr>
+                    <tr><td>Dress (simple)</td><td>$12.99</td></tr>
+                    <tr><td>Coat / Jacket</td><td>$14.99</td></tr>
+                    <tr><td>Sweater</td><td>$7.99</td></tr>
+                    <tr><td>Silk Blouse</td><td>$8.99</td></tr>
+                    <tr><td>Comforter</td><td>$29.99</td></tr>
+                    <tr><td>Wash & Fold</td><td>$2.49/lb</td></tr>
+                </table>
+            </div>
+            <div class="price-table">
+                <div class="price-table-header">✂️ Alterations</div>
+                <table>
+                    <tr><td>Hem (pants)</td><td>$12</td></tr>
+                    <tr><td>Hem (dress/skirt)</td><td>$15</td></tr>
+                    <tr><td>Take in / Let out waist</td><td>$18</td></tr>
+                    <tr><td>Taper legs</td><td>$20</td></tr>
+                    <tr><td>Replace zipper</td><td>$15–$35</td></tr>
+                    <tr><td>Buttons (replace)</td><td>$3–$5 ea</td></tr>
+                    <tr><td>Shorten sleeves</td><td>$18</td></tr>
+                    <tr><td>Wedding gown</td><td>Call for quote</td></tr>
+                    <tr><td>Custom project</td><td>Call for quote</td></tr>
+                </table>
+            </div>
+        </div>
+        <p style="text-align:center;margin-top:20px;color:var(--text-light);font-size:13px;">
+            * Prices are estimates. Complex work may vary. Kim will always discuss pricing with you before starting.
+        </p>
+    </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="reviews-section" id="reviews">
+    <div class="section-inner">
+        <div class="section-header">
+            <span class="section-tag">Reviews</span>
+            <h2>Acton's favorite hidden gem</h2>
+            <p>Kim's customers don't just come back — they bring their friends.</p>
+        </div>
+        <div class="reviews-grid">
+            <div class="review-card">
+                <div class="review-stars">★★★★★</div>
+                <div class="review-text">"Kim is a treasure. She altered my wedding dress perfectly — every detail was exact. She genuinely cares about getting it right. I've been bringing all my dry cleaning here since."</div>
+                <div class="review-author">Amanda S.</div>
+                <div class="review-source">Yelp Review</div>
+            </div>
+            <div class="review-card">
+                <div class="review-stars">★★★★★</div>
+                <div class="review-text">"Found Kim after a terrible experience at another tailor. She fixed their mistakes AND did the alterations I originally needed. She's honest, skilled, and remembers me every time I walk in."</div>
+                <div class="review-author">Robert D.</div>
+                <div class="review-source">Google Review</div>
+            </div>
+            <div class="review-card">
+                <div class="review-stars">★★★★★</div>
+                <div class="review-text">"Kim turned my late father's favorite flannel shirt into a pillow for my mom. She cried when she saw it. You can't put a price on that kind of thoughtfulness."</div>
+                <div class="review-author">Laura M.</div>
+                <div class="review-source">Google Review</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+    <div class="section-inner">
+        <div class="section-header">
+            <span class="section-tag">Schedule or Visit</span>
+            <h2>Schedule a pickup or stop by</h2>
+            <p>Schedule a free pickup online, or walk in anytime during business hours.</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-form">
+                <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--plum-dark);margin-bottom:20px;">Schedule a pickup or send a message</h3>
+                <form onsubmit="showConfirmation(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" placeholder="Your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" placeholder="(978) 555-0123" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>How would you like to get your items to us?</label>
+                        <select id="serviceSelect" onchange="togglePickup()">
+                            <option value="">Select</option>
+                            <option value="pickup">🚗 Free Pickup & Delivery</option>
+                            <option value="other">🏪 I'll drop off in store</option>
+                        </select>
+                    </div>
+                    <div id="pickupFields" style="display:none;">
+                        <div class="form-group">
+                            <label>Pickup Address</label>
+                            <input type="text" placeholder="123 Main St, Acton, MA">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Preferred Pickup Day</label>
+                                <select>
+                                    <option value="">Select a day</option>
+                                    <option>Monday</option>
+                                    <option>Tuesday</option>
+                                    <option>Wednesday</option>
+                                    <option>Thursday</option>
+                                    <option>Friday</option>
+                                    <option>Saturday</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Time Window</label>
+                                <select>
+                                    <option value="">Select time</option>
+                                    <option>9 AM – 11 AM</option>
+                                    <option>11 AM – 1 PM</option>
+                                    <option>1 PM – 3 PM</option>
+                                    <option>3 PM – 5 PM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="smsOpt" checked style="width:auto;">
+                            <label for="smsOpt" style="margin:0;font-weight:400;font-size:14px;">Text me updates about my order</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Items</label>
+                        <div class="item-picker" id="customerItemPicker">
+                            <div class="item-picker-header">
+                                <select id="custGarmentSelect">
+                                    <option value="">Garment type...</option>
+                                    <optgroup label="Dry Cleaning">
+                                        <option value="Suit|clean|18.00">Suit — $18</option>
+                                        <option value="Blazer / Sport Coat|clean|12.00">Blazer / Sport Coat — $12</option>
+                                        <option value="Dress Shirt|clean|5.50">Dress Shirt — $5.50</option>
+                                        <option value="Blouse|clean|7.00">Blouse — $7</option>
+                                        <option value="Pants / Slacks|clean|8.00">Pants / Slacks — $8</option>
+                                        <option value="Dress|clean|14.00">Dress — $14</option>
+                                        <option value="Coat / Overcoat|clean|20.00">Coat / Overcoat — $20</option>
+                                        <option value="Sweater|clean|8.00">Sweater — $8</option>
+                                        <option value="Tie|clean|5.00">Tie — $5</option>
+                                        <option value="Skirt|clean|8.00">Skirt — $8</option>
+                                    </optgroup>
+                                    <optgroup label="Laundry">
+                                        <option value="Shirt (laundered & pressed)|laundry|4.00">Shirt (laundered & pressed) — $4</option>
+                                        <option value="Wash & Fold (per lb)|laundry|2.50">Wash & Fold (per lb) — $2.50/lb</option>
+                                    </optgroup>
+                                    <optgroup label="Household">
+                                        <option value="Comforter|household|30.00">Comforter — $30</option>
+                                        <option value="Duvet Cover|household|22.00">Duvet Cover — $22</option>
+                                        <option value="Blanket|household|18.00">Blanket — $18</option>
+                                        <option value="Pillow|household|12.00">Pillow — $12</option>
+                                        <option value="Curtains (per panel)|household|18.00">Curtains (per panel) — $18</option>
+                                        <option value="Table Cloth|household|15.00">Table Cloth — $15</option>
+                                    </optgroup>
+                                    <optgroup label="Alterations">
+                                        <option value="Hem Pants|alter|15.00">Hem Pants — from $15</option>
+                                        <option value="Hem Dress / Skirt|alter|18.00">Hem Dress / Skirt — from $18</option>
+                                        <option value="Take In / Let Out|alter|20.00">Take In / Let Out — from $20</option>
+                                        <option value="Zipper Replacement|alter|18.00">Zipper Replacement — from $18</option>
+                                        <option value="Taper Pants / Shirt|alter|18.00">Taper Pants / Shirt — from $18</option>
+                                        <option value="Shorten Sleeves|alter|15.00">Shorten Sleeves — from $15</option>
+                                    </optgroup>
+                                    <optgroup label="Specialty">
+                                        <option value="Wedding Gown Cleaning|specialty|95.00">Wedding Gown Cleaning — from $95</option>
+                                        <option value="Wedding Gown Alteration|specialty|150.00">Wedding Gown Alteration — from $150</option>
+                                        <option value="Prom / Formal Dress|specialty|25.00">Prom / Formal Dress — from $25</option>
+                                        <option value="Leather / Suede|specialty|35.00">Leather / Suede — from $35</option>
+                                        <option value="Custom Project|specialty|0.00">Custom Project — TBD</option>
+                                    </optgroup>
+                                </select>
+                                <button type="button" class="btn-add-item" onclick="addCustomerItem()">+ Add</button>
+                            </div>
+                            <div class="item-list" id="custItemList"></div>
+                            <div class="item-picker-footer">
+                                <span id="custItemCount">0 items</span>
+                                <span class="total">Est. <span id="custItemTotal">$0.00</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Anything else Kim should know?</label>
+                        <textarea placeholder="Special instructions, stain details, timing needs..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-plum" style="width:100%;justify-content:center;">Submit →</button>
+                </form>
+            </div>
+            <div class="contact-info">
+                <h3>Find us in Acton</h3>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div class="contact-text">
+                        <h4>Location</h4>
+                        <p>159A Great Road, Acton, MA 01720<br>
+                        <span style="font-size:13px;">In Esterbrook Plaza, north of Trader Joe's</span></p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📞</div>
+                    <div class="contact-text">
+                        <h4>Phone</h4>
+                        <p><a href="tel:9784077554">978-407-7554</a> (Kim's mobile)</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🕐</div>
+                    <div class="contact-text">
+                        <h4>Hours</h4>
+                        <p>Mon – Fri: 9:00 AM – 5:30 PM<br>
+                        Saturday: 9:00 AM – 3:00 PM<br>
+                        Sunday: Closed</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🅿️</div>
+                    <div class="contact-text">
+                        <h4>Parking</h4>
+                        <p>Free parking in Esterbrook Plaza lot</p>
+                    </div>
+                </div>
+
+                <img src="img/photo_04.jpg" alt="Q Cleaner & Tailor storefront" style="width:100%;border-radius:12px;margin-top:24px;box-shadow:var(--shadow);">
+
+                <div style="margin-top:16px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2943!2d-71.4178838!3d42.4850554!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e390cdc8f818d5%3A0x826baf60af21d1ae!2s159a+Great+Rd%2C+Acton%2C+MA+01720!5e0!3m2!1sen!2sus!4v1"
+                        width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+
+                <div class="payment-methods">
+                    <h4>We Accept</h4>
+                    <div class="payment-icons">
+                        <span>💳</span> <span style="font-size:14px;">Credit Cards</span>
+                        <span>📝</span> <span style="font-size:14px;">Checks</span>
+                        <span>📱</span> <span style="font-size:14px;">Venmo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h3>Q Cleaner & Tailor</h3>
+                <p>Personalized dry cleaning and expert tailoring by Kim Walsh. Proudly serving Acton and surrounding communities for over 15 years.</p>
+                <p style="margin-top:12px;">159A Great Road, Acton, MA 01720<br>
+                <a href="tel:9784077554" style="color:var(--plum-pale);text-decoration:none;">978-407-7554</a></p>
+            </div>
+            <div class="footer-col">
+                <h4>Services</h4>
+                <a href="#services">Dry Cleaning</a>
+                <a href="#services">Alterations</a>
+                <a href="#weddings">Wedding & Bridal</a>
+                <a href="#services">Shoe Repair</a>
+                <a href="#pricing">Pricing</a>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <a href="tel:9784077554">Call Kim</a>
+                <a href="#contact">Send a Message</a>
+                <a href="https://www.facebook.com/QCleanerTailor" target="_blank">Facebook</a>
+                <a href="https://www.yelp.com/biz/q-cleaner-and-tailor-acton" target="_blank">Yelp</a>
+                <a href="#">@QCleanerTailor</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 Q Cleaner & Tailor, Acton MA. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<!-- CONFIRMATION MODAL -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div style="text-align:center;margin-bottom:20px;font-size:56px;">💚</div>
+        <h2>You're all set!</h2>
+        <p>Kim will confirm your request shortly — usually within a few hours during business hours.</p>
+        <div style="background:var(--plum-pale);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <div style="font-weight:600;color:var(--plum-dark);margin-bottom:4px;">What happens next:</div>
+            <div style="font-size:14px;color:var(--text-light);">
+                1. Kim will text you to confirm your pickup time<br>
+                2. Leave your garment bag out at the scheduled time<br>
+                3. She'll handle the rest and deliver back in 48 hours!
+            </div>
+        </div>
+        <p style="font-size:14px;color:var(--text-light);">For anything urgent, call Kim at <a href="tel:9784077554" style="color:var(--plum);font-weight:600;">978-407-7554</a>.</p>
+        <button class="btn btn-plum" onclick="closeModal()">Got it!</button>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('scroll', () => {
+        document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    function toggleMobile() {
+        document.getElementById('mobileMenu').classList.toggle('active');
+    }
+
+    function showConfirmation(e) {
+        e.preventDefault();
+        document.getElementById('confirmModal').classList.add('active');
+    }
+    function closeModal() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    function togglePickup() {
+        const sel = document.getElementById('serviceSelect');
+        const fields = document.getElementById('pickupFields');
+        fields.style.display = sel.value === 'pickup' ? 'block' : 'none';
+    }
+
+    // ===== ITEM PICKER =====
+    let custItems = [];
+    function addCustomerItem() {
+        const sel = document.getElementById('custGarmentSelect');
+        if (!sel.value) return;
+        const [name, service, price] = sel.value.split('|');
+        custItems.push({ name, service, price: parseFloat(price), qty: 1, note: '' });
+        sel.value = '';
+        renderCustomerItems();
+    }
+    function updateCustQty(i, delta) {
+        custItems[i].qty = Math.max(1, custItems[i].qty + delta);
+        renderCustomerItems();
+    }
+    function removeCustItem(i) {
+        custItems.splice(i, 1);
+        renderCustomerItems();
+    }
+    function updateCustNote(i, val) {
+        custItems[i].note = val;
+    }
+    function renderCustomerItems() {
+        const list = document.getElementById('custItemList');
+        const svcLabels = { clean: 'Dry Clean', laundry: 'Laundry', household: 'Household', alter: 'Alteration', specialty: 'Specialty' };
+        list.innerHTML = custItems.map((item, i) => `
+            <div>
+                <div class="item-row">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-service">${svcLabels[item.service] || item.service}</span>
+                    <div class="item-qty">
+                        <button type="button" onclick="updateCustQty(${i},-1)">−</button>
+                        <span>${item.qty}</span>
+                        <button type="button" onclick="updateCustQty(${i},1)">+</button>
+                    </div>
+                    <button type="button" class="item-remove" onclick="removeCustItem(${i})">✕</button>
+                </div>
+                <input class="item-note-input" placeholder="Note (optional): stain, color, special instructions..." value="${item.note}" oninput="updateCustNote(${i},this.value)">
+            </div>
+        `).join('');
+        const totalItems = custItems.reduce((s, it) => s + it.qty, 0);
+        const totalPrice = custItems.reduce((s, it) => s + it.price * it.qty, 0);
+        document.getElementById('custItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
+        document.getElementById('custItemTotal').textContent = '$' + totalPrice.toFixed(2);
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            const target = document.querySelector(a.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
