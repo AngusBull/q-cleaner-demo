@@ -1082,6 +1082,7 @@
     }
 
     const PICKUP_SURCHARGE = 1.00; // per item for pickup orders
+    const MA_TAX_RATE = 0.0625; // Massachusetts sales tax
 
     async function submitOrder(form) {
         const isPickup = document.getElementById('serviceSelect').value === 'pickup';
@@ -1096,7 +1097,8 @@
             itemsSummary: custItems.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', '),
             subtotal: subtotal,
             deliveryFee: deliveryFee,
-            estimatedTotal: subtotal + deliveryFee,
+            tax: Math.round((subtotal + deliveryFee) * MA_TAX_RATE * 100) / 100,
+            estimatedTotal: Math.round((subtotal + deliveryFee) * (1 + MA_TAX_RATE) * 100) / 100,
             status: 'new',
             priority: 'normal',
             sms: true,
@@ -1274,10 +1276,17 @@
         const hasWeighed = custItems.some(it => it.weighed);
         const fee = (isPickup && subtotal > 0 && subtotal < FREE_DELIVERY_MIN) ? DELIVERY_FEE : 0;
         document.getElementById('custItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
-        let totalHtml = '$' + subtotal.toFixed(2);
+        const preTotal = subtotal + fee;
+        const tax = Math.round(preTotal * MA_TAX_RATE * 100) / 100;
+        const grandTotal = preTotal + tax;
+        let totalHtml = '$' + grandTotal.toFixed(2);
         if (hasWeighed) totalHtml += ' <span style="font-size:12px;color:#e67e22;">+ wash & fold (weighed at pickup)</span>';
-        else if (fee > 0) totalHtml += ' <span style="font-size:12px;color:#e67e22;">+ $' + fee.toFixed(2) + ' delivery</span>';
-        else if (isPickup && subtotal >= FREE_DELIVERY_MIN) totalHtml += ' <span style="font-size:12px;color:var(--plum);">FREE delivery ✓</span>';
+        else {
+            totalHtml += ' <span style="font-size:12px;color:#888;">(incl. $' + tax.toFixed(2) + ' tax';
+            if (fee > 0) totalHtml += ' + $' + fee.toFixed(2) + ' delivery';
+            else if (isPickup && subtotal >= FREE_DELIVERY_MIN) totalHtml += ' · FREE delivery ✓';
+            totalHtml += ')</span>';
+        }
         document.getElementById('custItemTotal').innerHTML = totalHtml;
     }
 

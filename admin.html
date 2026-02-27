@@ -551,11 +551,13 @@ function renderAdminItems() {
     `).join('');
     const totalItems = adminItems.reduce((s, it) => s + it.qty, 0);
     const totalPrice = adminItems.reduce((s, it) => s + it.price * it.qty, 0);
+    const tax = Math.round(totalPrice * MA_TAX_RATE * 100) / 100;
+    const withTax = totalPrice + tax;
     document.getElementById('adminItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
-    document.getElementById('adminItemTotal').textContent = '$' + totalPrice.toFixed(2);
+    document.getElementById('adminItemTotal').textContent = '$' + withTax.toFixed(2) + (totalPrice > 0 ? ' (incl $' + tax.toFixed(2) + ' tax)' : '');
     // Auto-fill price field if no override
     const priceField = document.getElementById('o_price');
-    if (!priceField.dataset.overridden) priceField.value = '$' + totalPrice.toFixed(2);
+    if (!priceField.dataset.overridden) priceField.value = '$' + withTax.toFixed(2);
 }
 // Allow manual price override
 document.addEventListener('DOMContentLoaded', () => {
@@ -624,6 +626,7 @@ async function initFirebase() {
 }
 initFirebase();
 
+const MA_TAX_RATE = 0.0625;
 const STATUSES = ['new', 'pickedup', 'cleaning', 'ready', 'complete'];
 const STATUS_LABELS = { new: 'New', pickedup: 'Picked Up', cleaning: 'Cleaning', ready: 'Ready', complete: 'Complete' };
 const STATUS_DOTS = { new: 'dot-new', pickedup: 'dot-pickedup', cleaning: 'dot-cleaning', ready: 'dot-ready', complete: 'dot-complete' };
@@ -1048,7 +1051,7 @@ function showDetail(id) {
             })()
         }</div></div>
         <div class="detail-grid">
-            <div class="detail-section"><div class="detail-label">Price</div><div class="detail-value">${o.price || (o.estimatedTotal ? '$' + Number(o.estimatedTotal).toFixed(2) : 'TBD')}${o.deliveryFee ? ` <span style="font-size:11px;color:#e67e22;">(incl. $${Number(o.deliveryFee).toFixed(2)} delivery)</span>` : ''}${o.paymentStatus ? ` <span style="font-size:11px;color:${o.paymentStatus === 'charged' ? 'var(--green)' : '#e67e22'};">${o.paymentStatus === 'charged' ? '✅ Charged' : '💳 Card on file'}</span>` : ''}</div></div>
+            <div class="detail-section"><div class="detail-label">Price</div><div class="detail-value">${o.price || (o.estimatedTotal ? '$' + Number(o.estimatedTotal).toFixed(2) : 'TBD')}${o.tax ? ` <span style="font-size:11px;color:#888;">(incl. $${Number(o.tax).toFixed(2)} tax)</span>` : ''}${o.deliveryFee ? ` <span style="font-size:11px;color:#e67e22;">(+ $${Number(o.deliveryFee).toFixed(2)} delivery)</span>` : ''}${o.paymentStatus ? ` <span style="font-size:11px;color:${o.paymentStatus === 'charged' ? 'var(--green)' : '#e67e22'};">${o.paymentStatus === 'charged' ? '✅ Charged' : '💳 Card on file'}</span>` : ''}</div></div>
             <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value"><input type="date" value="${o.due || ''}" onchange="updateDue('${o.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;"></div></div>
         </div>
         ${(function(){
@@ -1115,7 +1118,9 @@ function recordWeight(id) {
     }
     const isPickup = order.type === 'pickup';
     const surcharge = isPickup ? items.reduce((s, it) => s + (it.qty || 1), 0) : 0;
-    order.finalTotal = otherTotal + washTotal + surcharge + (order.deliveryFee || 0);
+    const preTax = otherTotal + washTotal + surcharge + (order.deliveryFee || 0);
+    order.tax = Math.round(preTax * MA_TAX_RATE * 100) / 100;
+    order.finalTotal = Math.round((preTax + order.tax) * 100) / 100;
     order.price = '$' + order.finalTotal.toFixed(2);
     fbSaveOrder(order);
     save();
@@ -1136,7 +1141,9 @@ function recordQuote(id) {
     const price = parseFloat(input ? input.value : 0);
     if (!price || price <= 0) { alert('Please enter a price.'); return; }
     order.quotedPrice = price;
-    order.finalTotal = price + (order.deliveryFee || 0);
+    const quotePreTax = price + (order.deliveryFee || 0);
+    order.tax = Math.round(quotePreTax * MA_TAX_RATE * 100) / 100;
+    order.finalTotal = Math.round((quotePreTax + order.tax) * 100) / 100;
     order.price = '$' + order.finalTotal.toFixed(2);
     fbSaveOrder(order);
     save();
