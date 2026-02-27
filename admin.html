@@ -506,6 +506,47 @@ function getAdminItemsSummary() {
     return adminItems.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name + (it.note ? ' (' + it.note + ')' : '')).join(', ');
 }
 
+// ===== FIREBASE =====
+const FIREBASE_CONFIG = {
+    projectId: "q-cleaner-demo",
+    appId: "1:454656896610:web:5675c18d2300bb2c02ab3b",
+    storageBucket: "q-cleaner-demo.firebasestorage.app",
+    apiKey: "AIzaSyATz-PkmYiKw8v-L2_v-4t7DdCSTWq3t-Y",
+    authDomain: "q-cleaner-demo.firebaseapp.com",
+    messagingSenderId: "454656896610"
+};
+let db = null, fbReady = false;
+async function initFirebase() {
+    try {
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js');
+        const fb = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js');
+        const app = initializeApp(FIREBASE_CONFIG);
+        db = fb.getFirestore(app);
+        window._fb = fb;
+        fbReady = true;
+        // Real-time listener
+        fb.onSnapshot(fb.collection(db, 'orders'), (snapshot) => {
+            const fbOrders = [];
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                d._fbId = doc.id;
+                d.id = d.id || doc.id;
+                // Normalize items field for SMS templates
+                if (!d.items && d.itemsSummary) d.items = d.itemsSummary;
+                if (!d.items && d.itemDetails) d.items = d.itemDetails.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
+                fbOrders.push(d);
+            });
+            // Merge: FB orders + local-only demo orders
+            const fbIds = new Set(fbOrders.map(o => o._fbId));
+            orders = [...fbOrders, ...orders.filter(o => !o._fbId && !fbIds.has(o.id))];
+            nextId = Math.max(0, ...orders.filter(o=>typeof o.id==='number').map(o => o.id)) + 1;
+            save();
+            render();
+        });
+    } catch(e) { console.warn('Firebase init failed, using localStorage only:', e); }
+}
+initFirebase();
+
 const STATUSES = ['new', 'pickedup', 'cleaning', 'ready', 'complete'];
 const STATUS_LABELS = { new: 'New', pickedup: 'Picked Up', cleaning: 'Cleaning', ready: 'Ready', complete: 'Complete' };
 const STATUS_DOTS = { new: 'dot-new', pickedup: 'dot-pickedup', cleaning: 'dot-cleaning', ready: 'dot-ready', complete: 'dot-complete' };
@@ -555,6 +596,31 @@ let nextId = Math.max(...orders.map(o => o.id)) + 1;
 function save() {
     localStorage.setItem('q_orders', JSON.stringify(orders));
     localStorage.setItem('q_sms', JSON.stringify(smsLog));
+}
+
+async function fbSaveOrder(order) {
+    if (!fbReady || !db) return;
+    try {
+        const fb = window._fb;
+        if (order._fbId) {
+            const ref = fb.doc(db, 'orders', order._fbId);
+            const data = Object.assign({}, order);
+            delete data._fbId;
+            await fb.updateDoc(ref, data);
+        } else {
+            const data = Object.assign({}, order);
+            delete data._fbId;
+            const docRef = await fb.addDoc(fb.collection(db, 'orders'), data);
+            order._fbId = docRef.id;
+        }
+    } catch(e) { console.warn('Firestore save failed:', e); }
+}
+
+async function fbDeleteOrder(order) {
+    if (!fbReady || !db || !order._fbId) return;
+    try {
+        await window._fb.deleteDoc(window._fb.doc(db, 'orders', order._fbId));
+    } catch(e) { console.warn('Firestore delete failed:', e); }
 }
 
 // ========== RENDERING ==========
@@ -715,6 +781,7 @@ function createOrder(e) {
         created: new Date().toISOString(),
     };
     orders.push(order);
+    fbSaveOrder(order);
     save();
 
     if (order.sms && order.type === 'pickup') {
@@ -741,6 +808,7 @@ function advanceOrder(id) {
 
     const oldStatus = order.status;
     order.status = STATUSES[idx + 1];
+    fbSaveOrder(order);
     save();
 
     // Auto-send SMS on status change
@@ -769,6 +837,7 @@ function deleteOrder(id) {
     const order = orders.find(o => o.id === id);
     if (!order) return;
     if (!confirm(`Delete order for ${order.name}?`)) return;
+    fbDeleteOrder(order);
     orders = orders.filter(o => o.id !== id);
     save();
     render();
@@ -822,6 +891,7 @@ function changeStatus(id, newStatus) {
     const order = orders.find(o => o.id === id);
     if (!order) return;
     order.status = newStatus;
+    fbSaveOrder(order);
     save();
     render();
     showToast(`✅ ${order.name} → ${STATUS_LABELS[newStatus]}`);

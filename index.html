@@ -984,12 +984,63 @@
         document.getElementById('mobileMenu').classList.toggle('active');
     }
 
+    // ===== FIREBASE =====
+    const FIREBASE_CONFIG = {
+        projectId: "q-cleaner-demo",
+        appId: "1:454656896610:web:5675c18d2300bb2c02ab3b",
+        storageBucket: "q-cleaner-demo.firebasestorage.app",
+        apiKey: "AIzaSyATz-PkmYiKw8v-L2_v-4t7DdCSTWq3t-Y",
+        authDomain: "q-cleaner-demo.firebaseapp.com",
+        messagingSenderId: "454656896610"
+    };
+    let db = null;
+    async function initFirebase() {
+        try {
+            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js');
+            const { getFirestore, collection, addDoc } = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js');
+            const app = initializeApp(FIREBASE_CONFIG);
+            db = getFirestore(app);
+            window._fb = { collection, addDoc };
+        } catch(e) { console.warn('Firebase init failed:', e); }
+    }
+    initFirebase();
+
+    async function submitOrder(form) {
+        const data = {
+            name: form.querySelector('input[type="text"]').value,
+            phone: form.querySelector('input[type="tel"]').value,
+            email: form.querySelector('input[type="email"]').value || '',
+            type: document.getElementById('serviceSelect').value === 'pickup' ? 'pickup' : 'walkin',
+            items: custItems.map(it => ({ name: it.name, service: it.service, price: it.price, qty: it.qty, note: it.note })),
+            itemsSummary: custItems.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', '),
+            estimatedTotal: custItems.reduce((s, it) => s + it.price * it.qty, 0),
+            status: 'new',
+            priority: 'normal',
+            sms: true,
+            notes: form.querySelector('textarea').value || '',
+            created: new Date().toISOString()
+        };
+        if (data.type === 'pickup') {
+            const inputs = document.getElementById('pickupFields').querySelectorAll('input, select');
+            data.address = inputs[0] ? inputs[0].value : '';
+            data.pickupDay = inputs[1] ? inputs[1].value : '';
+            data.pickupTime = inputs[2] ? inputs[2].value : '';
+            data.sms = document.getElementById('smsOpt') ? document.getElementById('smsOpt').checked : true;
+        }
+        if (db && window._fb) {
+            try {
+                await window._fb.addDoc(window._fb.collection(db, 'orders'), data);
+            } catch(e) { console.warn('Firestore write failed:', e); }
+        }
+        return data;
+    }
+
     function showConfirmation(e) {
         e.preventDefault();
         var form = e.target.closest ? e.target.closest('form') : e.target;
         if (!form || !form.reset) form = document.querySelector('.contact-form form');
+        submitOrder(form);
         document.getElementById('confirmModal').classList.add('active');
-        // Reset form and item picker
         setTimeout(function() {
             form.reset();
             custItems = [];
