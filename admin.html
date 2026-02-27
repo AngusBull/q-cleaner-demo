@@ -910,6 +910,23 @@ function createOrder(e) {
         due: document.getElementById('o_due').value,
         created: new Date().toISOString(),
     };
+    // Parse numeric total from price string (e.g. "$45.00" → 45.00)
+    const priceStr = order.price.replace(/[^0-9.]/g, '');
+    const priceNum = parseFloat(priceStr) || 0;
+    const isPickup = order.type === 'pickup';
+    const deliveryFee = (isPickup && priceNum < 30) ? 5.99 : 0;
+    order.subtotal = priceNum;
+    order.deliveryFee = deliveryFee;
+    order.tax = Math.round((priceNum + deliveryFee) * MA_TAX_RATE * 100) / 100;
+    order.estimatedTotal = Math.round((priceNum + deliveryFee + order.tax) * 100) / 100;
+    order.finalTotal = order.estimatedTotal;
+    order.price = '$' + order.finalTotal.toFixed(2);
+    // Auto-calculate due date: 48hrs from pickup day, or 48hrs from now for walk-ins
+    if (!order.due) {
+        const baseDate = order.pickupDay ? new Date(order.pickupDay + 'T12:00:00') : new Date();
+        baseDate.setDate(baseDate.getDate() + 2);
+        order.due = baseDate.toISOString().split('T')[0];
+    }
     orders.push(order);
     fbSaveOrder(order);
     save();
@@ -1070,8 +1087,9 @@ function showDetail(id) {
         ${(function(){
             if (o.paymentStatus === 'charged') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Charged $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
             if (o.paymentStatus === 'paid-in-store') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Paid in store — $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
-            const amt = Number(o.finalTotal || o.estimatedTotal || 0).toFixed(2);
-            return '<div class="detail-section" style="display:flex;gap:8px;"><button class="order-btn advance" onclick="chargeCard(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;">💳 Charge Card — $'+amt+'</button><button onclick="markPaidInStore(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:#1565c0;color:white;border:none;border-radius:8px;cursor:pointer;">🏪 Paid at Register</button></div>';
+            let amt = Number(o.finalTotal || o.estimatedTotal || 0);
+            if (!amt && o.price) amt = parseFloat(String(o.price).replace(/[^0-9.]/g, '')) || 0;
+            return '<div class="detail-section" style="display:flex;gap:8px;"><button class="order-btn advance" onclick="chargeCard(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;">💳 Charge Card — $'+amt.toFixed(2)+'</button><button onclick="markPaidInStore(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:#1565c0;color:white;border:none;border-radius:8px;cursor:pointer;">🏪 Paid at Register</button></div>';
         })()}
         ${o.notes ? `<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${o.notes}</div></div>` : ''}
         <div class="detail-section" style="margin-top:16px;">
@@ -1169,7 +1187,8 @@ function updateDue(id, dateVal) {
 function chargeCard(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
-    const amount = order.finalTotal || order.estimatedTotal || 0;
+    let amount = order.finalTotal || order.estimatedTotal || 0;
+    if (!amount && order.price) amount = parseFloat(String(order.price).replace(/[^0-9.]/g, '')) || 0;
     if (!amount) { alert('No amount to charge. Record weight or set price first.'); return; }
     if (!confirm(`Charge $${Number(amount).toFixed(2)} to ${order.name}'s card on file?`)) return;
     // When Square is connected, this calls Square Payments API
@@ -1191,7 +1210,8 @@ function chargeCard(id) {
 function markPaidInStore(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
-    const amount = order.finalTotal || order.estimatedTotal || 0;
+    let amount = order.finalTotal || order.estimatedTotal || 0;
+    if (!amount && order.price) amount = parseFloat(String(order.price).replace(/[^0-9.]/g, '')) || 0;
     if (!amount) { alert('No amount set. Record weight or set price first.'); return; }
     if (!confirm(`Mark $${Number(amount).toFixed(2)} as paid at register for ${order.name}?`)) return;
     order.paymentStatus = 'paid-in-store';
