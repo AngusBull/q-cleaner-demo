@@ -1087,8 +1087,7 @@ function showDetail(id) {
         ${(function(){
             if (o.paymentStatus === 'charged') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Charged $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
             if (o.paymentStatus === 'paid-in-store') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Paid in store — $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
-            let amt = Number(o.finalTotal || o.estimatedTotal || 0);
-            if (!amt && o.price) amt = parseFloat(String(o.price).replace(/[^0-9.]/g, '')) || 0;
+            let amt = getOrderAmount(o);
             return '<div class="detail-section" style="display:flex;gap:8px;"><button class="order-btn advance" onclick="chargeCard(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;">💳 Charge Card — $'+amt.toFixed(2)+'</button><button onclick="markPaidInStore(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:#1565c0;color:white;border:none;border-radius:8px;cursor:pointer;">🏪 Paid at Register</button></div>';
         })()}
         ${o.notes ? `<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${o.notes}</div></div>` : ''}
@@ -1184,11 +1183,25 @@ function updateDue(id, dateVal) {
     showToast(`📅 Due date updated`);
 }
 
+function getOrderAmount(order) {
+    if (order.finalTotal) return Number(order.finalTotal);
+    if (order.estimatedTotal) return Number(order.estimatedTotal);
+    if (order.price) {
+        const parsed = parseFloat(String(order.price).replace(/[^0-9.]/g, ''));
+        if (parsed > 0) return parsed;
+    }
+    // Fall back to summing items
+    const items = order.itemDetails || order.items || [];
+    if (Array.isArray(items) && items.length && items[0].price !== undefined) {
+        return items.reduce((s, it) => s + (Number(it.price) || 0) * (it.qty || 1), 0);
+    }
+    return 0;
+}
+
 function chargeCard(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
-    let amount = order.finalTotal || order.estimatedTotal || 0;
-    if (!amount && order.price) amount = parseFloat(String(order.price).replace(/[^0-9.]/g, '')) || 0;
+    let amount = getOrderAmount(order);
     if (!amount) { alert('No amount to charge. Record weight or set price first.'); return; }
     if (!confirm(`Charge $${Number(amount).toFixed(2)} to ${order.name}'s card on file?`)) return;
     // When Square is connected, this calls Square Payments API
@@ -1210,8 +1223,7 @@ function chargeCard(id) {
 function markPaidInStore(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
-    let amount = order.finalTotal || order.estimatedTotal || 0;
-    if (!amount && order.price) amount = parseFloat(String(order.price).replace(/[^0-9.]/g, '')) || 0;
+    let amount = getOrderAmount(order);
     if (!amount) { alert('No amount set. Record weight or set price first.'); return; }
     if (!confirm(`Mark $${Number(amount).toFixed(2)} as paid at register for ${order.name}?`)) return;
     order.paymentStatus = 'paid-in-store';
