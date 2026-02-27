@@ -944,17 +944,18 @@ function createOrder(e) {
     save();
 
     // Create or update customer record in Firebase
-    if (db && order.phone) {
+    if (db && window._fb && order.phone) {
         const phone = order.phone.replace(/\D/g, '').slice(-10);
         if (phone.length === 10) {
+            const _fb = window._fb;
             (async () => {
                 try {
-                    const q = fb.query(fb.collection(db, 'customers'), fb.where('phone', '==', phone));
-                    const snap = await fb.getDocs(q);
+                    const q = _fb.query(_fb.collection(db, 'customers'), _fb.where('phone', '==', phone));
+                    const snap = await _fb.getDocs(q);
                     if (!snap.empty) {
                         const custRef = snap.docs[0].ref;
                         const existing = snap.docs[0].data();
-                        await fb.updateDoc(custRef, {
+                        await _fb.updateDoc(custRef, {
                             name: order.name || existing.name,
                             email: order.email || existing.email,
                             address: order.address || existing.address,
@@ -964,7 +965,7 @@ function createOrder(e) {
                             updatedAt: new Date().toISOString()
                         });
                     } else {
-                        await fb.addDoc(fb.collection(db, 'customers'), {
+                        await _fb.addDoc(_fb.collection(db, 'customers'), {
                             name: order.name,
                             phone: phone,
                             email: order.email || '',
