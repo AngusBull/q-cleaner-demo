@@ -777,29 +777,21 @@
                             <label>Pickup Address</label>
                             <input type="text" placeholder="123 Main St, Acton, MA">
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Preferred Pickup Day</label>
-                                <select>
-                                    <option value="">Select a day</option>
-                                    <option>Monday</option>
-                                    <option>Tuesday</option>
-                                    <option>Wednesday</option>
-                                    <option>Thursday</option>
-                                    <option>Friday</option>
-                                    <option>Saturday</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Time Window</label>
-                                <select>
-                                    <option value="">Select time</option>
-                                    <option>9 AM – 11 AM</option>
-                                    <option>11 AM – 1 PM</option>
-                                    <option>1 PM – 3 PM</option>
-                                    <option>3 PM – 5 PM</option>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label>Preferred Pickup Day</label>
+                            <select>
+                                <option value="">Select a day</option>
+                                <option>Monday</option>
+                                <option>Tuesday</option>
+                                <option>Wednesday</option>
+                                <option>Thursday</option>
+                                <option>Friday</option>
+                                <option>Saturday</option>
+                            </select>
+                        </div>
+                        <div style="background:var(--plum-pale);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+                            <div style="font-size:14px;color:var(--plum-dark);"><strong>🚗 Pickup:</strong> 9–11 AM &nbsp;|&nbsp; <strong>📦 Delivery:</strong> 3–5 PM</div>
+                            <div style="font-size:12px;color:var(--text-light);margin-top:4px;">Mon–Sat. Leave your garment bag on the porch — Kim will handle the rest.</div>
                         </div>
                         <div class="form-group" style="display:flex;align-items:center;gap:8px;">
                             <input type="checkbox" id="smsOpt" checked style="width:auto;">
@@ -965,9 +957,9 @@
         <div style="background:var(--plum-pale);border-radius:10px;padding:16px;margin-bottom:16px;">
             <div style="font-weight:600;color:var(--plum-dark);margin-bottom:4px;">What happens next:</div>
             <div style="font-size:14px;color:var(--text-light);">
-                1. Kim will text you to confirm your pickup time<br>
-                2. Leave your garment bag out at the scheduled time<br>
-                3. She'll handle the rest and deliver back in 48 hours!
+                1. You'll get a confirmation text shortly<br>
+                2. Leave your garment bag on the porch by 9 AM<br>
+                3. Kim picks up 9–11 AM, delivers back 3–5 PM within 48 hours!
             </div>
         </div>
         <p style="font-size:14px;color:var(--text-light);">For anything urgent, call Kim at <a href="tel:9784077554" style="color:var(--plum);font-weight:600;">978-407-7554</a>.</p>
@@ -1040,7 +1032,8 @@
             const inputs = document.getElementById('pickupFields').querySelectorAll('input, select');
             data.address = inputs[0] ? inputs[0].value : '';
             data.pickupDay = inputs[1] ? inputs[1].value : '';
-            data.pickupTime = inputs[2] ? inputs[2].value : '';
+            data.pickupTime = '9 AM – 11 AM';
+            data.deliveryTime = '3 PM – 5 PM';
             data.sms = document.getElementById('smsOpt') ? document.getElementById('smsOpt').checked : true;
         }
         // Build confirmation SMS (sent via Twilio when enabled)
@@ -1048,7 +1041,7 @@
         const itemCount = data.items.reduce((s, it) => s + it.qty, 0);
         const itemList = data.itemsSummary || data.items.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
         if (data.type === 'pickup') {
-            data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. Kim will confirm your pickup for ${data.pickupDay || 'your requested day'}${data.pickupTime ? ' ' + data.pickupTime : ''}. Questions? Call 978-407-7554`;
+            data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. Pickup: ${data.pickupDay || 'TBD'} 9–11 AM. Leave your garment bag on the porch — Kim will handle the rest! Delivery back by 3–5 PM within 48hrs. Questions? Call 978-407-7554`;
         } else {
             data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. We'll text you when it's ready for pickup at 159A Great Rd, Acton. Questions? Call 978-407-7554`;
         }
