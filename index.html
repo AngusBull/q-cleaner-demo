@@ -1026,7 +1026,8 @@
             priority: 'normal',
             sms: true,
             notes: form.querySelector('textarea').value || '',
-            created: new Date().toISOString()
+            created: new Date().toISOString(),
+            due: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().split('T')[0]
         };
         if (data.type === 'pickup') {
             const inputs = document.getElementById('pickupFields').querySelectorAll('input, select');

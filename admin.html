@@ -867,19 +867,19 @@ function showDetail(id) {
         ${o.address ? `<div class="detail-section"><div class="detail-label">Address</div><div class="detail-value">${o.address}</div></div>` : ''}
         ${o.pickupDay ? `<div class="detail-grid"><div class="detail-section"><div class="detail-label">Pickup Day</div><div class="detail-value">${o.pickupDay}</div></div><div class="detail-section"><div class="detail-label">Time</div><div class="detail-value">${o.pickupTime || 'TBD'}</div></div></div>` : ''}
         <div class="detail-section"><div class="detail-label">Items</div><div class="detail-value">${
-            o.itemDetails && o.itemDetails.length
-                ? '<table style="width:100%;font-size:13px;border-collapse:collapse;">' +
-                  o.itemDetails.map(it => `<tr style="border-bottom:1px solid #f0f0f0;">
-                    <td style="padding:4px 0;">${it.name}</td>
-                    <td style="padding:4px 8px;text-align:center;color:#888;">×${it.qty}</td>
-                    <td style="padding:4px 0;text-align:right;font-weight:600;">$${(it.price * it.qty).toFixed(2)}</td>
-                  </tr>${it.note ? `<tr><td colspan="3" style="padding:0 0 4px;font-size:11px;color:#999;">↳ ${it.note}</td></tr>` : ''}`).join('') +
-                  '</table>'
-                : o.items
+            (function(){
+                const itms = o.itemDetails || o.items || [];
+                if (Array.isArray(itms) && itms.length && itms[0].name) {
+                    return '<table style="width:100%;font-size:13px;border-collapse:collapse;">' +
+                        itms.map(it => '<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:4px 0;">' + (it.name||'') + '</td><td style="padding:4px 8px;text-align:center;color:#888;">' + (it.weighed ? '⚖️' : '×'+(it.qty||1)) + '</td><td style="padding:4px 0;text-align:right;font-weight:600;">' + (it.weighed ? 'TBD' : '$'+(it.price * (it.qty||1)).toFixed(2)) + '</td></tr>' + (it.note ? '<tr><td colspan="3" style="padding:0 0 4px;font-size:11px;color:#999;">↳ ' + it.note + '</td></tr>' : '')).join('') +
+                        '</table>';
+                }
+                return o.itemsSummary || (typeof itms === 'string' ? itms : '—');
+            })()
         }</div></div>
         <div class="detail-grid">
             <div class="detail-section"><div class="detail-label">Price</div><div class="detail-value">${o.price || (o.estimatedTotal ? '$' + Number(o.estimatedTotal).toFixed(2) : 'TBD')}${o.deliveryFee ? ` <span style="font-size:11px;color:#e67e22;">(incl. $${Number(o.deliveryFee).toFixed(2)} delivery)</span>` : ''}${o.paymentStatus ? ` <span style="font-size:11px;color:${o.paymentStatus === 'charged' ? 'var(--green)' : '#e67e22'};">${o.paymentStatus === 'charged' ? '✅ Charged' : '💳 Card on file'}</span>` : ''}</div></div>
-            <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value">${o.due || '—'}</div></div>
+            <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value"><input type="date" value="${o.due || ''}" onchange="updateDue('${o.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;"></div></div>
         </div>
         ${(function(){
             const items = o.items || o.itemDetails || [];
@@ -977,6 +977,15 @@ function recordQuote(id) {
     closeModal('detailModal');
     render();
     showToast(`💰 Quote set — $${order.finalTotal.toFixed(2)}`);
+}
+
+function updateDue(id, dateVal) {
+    const order = orders.find(o => String(o.id) === String(id));
+    if (!order) return;
+    order.due = dateVal;
+    fbSaveOrder(order);
+    save();
+    showToast(`📅 Due date updated`);
 }
 
 function chargeCard(id) {
