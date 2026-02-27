@@ -557,13 +557,21 @@ const STATUS_LABELS = { new: 'New', pickedup: 'Picked Up', cleaning: 'Cleaning',
 const STATUS_DOTS = { new: 'dot-new', pickedup: 'dot-pickedup', cleaning: 'dot-cleaning', ready: 'dot-ready', complete: 'dot-complete' };
 const STATUS_BADGES = { new: 'badge-new', pickedup: 'badge-pickedup', cleaning: 'badge-cleaning', ready: 'badge-ready', complete: 'badge-complete' };
 
+function getItemsText(o) {
+    const items = o.itemDetails || o.items || [];
+    if (Array.isArray(items) && items.length && items[0].name) {
+        return items.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
+    }
+    return o.itemsSummary || (typeof items === 'string' ? items : '');
+}
+
 const SMS_TEMPLATES = {
-    reminder: (o) => `Hi ${o.name.split(' ')[0]}! 👋 Reminder: leave your garment bag out by ${o.pickupTime || '9 AM'}. Kim will swing by ${o.pickupDay || 'today'}.`,
-    pickedup: (o) => `Picked up! 🧺 ${o.items}. Kim will have them ready ${o.due || 'in 48 hours'}.`,
-    ready: (o) => `Your order is ready! ✨ ${o.type === 'pickup' ? 'Kim will deliver soon.' : 'Stop by Q Cleaner to pick up. Open until 5:30 PM.'}`,
+    reminder: (o) => `Hi ${o.name.split(' ')[0]}! 👋 Reminder: leave your garment bag out by 9 AM. Kim will swing by ${o.pickupDay || 'today'}.`,
+    pickedup: (o) => `Picked up! 🧺 ${getItemsText(o)}. Kim will have them ready ${o.due ? 'by ' + new Date(o.due).toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'}) : 'in 48 hours'}.`,
+    ready: (o) => `Your order is ready! ✨ ${o.type === 'pickup' ? 'Kim will deliver on her next route (9–11 AM). Leave your porch accessible!' : 'Stop by Q Cleaner to pick up. Open until 5:30 PM.'}`,
     delivering: (o) => `Out for delivery! 🚗 Kim is on her way to ${o.address || 'your address'}. Should arrive within the hour.`,
     delivered: (o) => `Delivered! Hanging on your front door. Have a great day! 💚`,
-    custom_ready: (o) => `Hi ${o.name.split(' ')[0]}! Your ${o.items} are ready for pickup at Q Cleaner & Tailor. We're open until 5:30 PM today.`
+    custom_ready: (o) => `Hi ${o.name.split(' ')[0]}! Your ${getItemsText(o)} are ready for pickup at Q Cleaner & Tailor. We're open until 5:30 PM today.`
 };
 
 function loadOrders() {
