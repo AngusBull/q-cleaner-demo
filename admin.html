@@ -943,6 +943,47 @@ function createOrder(e) {
     fbSaveOrder(order);
     save();
 
+    // Create or update customer record in Firebase
+    if (db && order.phone) {
+        const phone = order.phone.replace(/\D/g, '').slice(-10);
+        if (phone.length === 10) {
+            (async () => {
+                try {
+                    const q = fb.query(fb.collection(db, 'customers'), fb.where('phone', '==', phone));
+                    const snap = await fb.getDocs(q);
+                    if (!snap.empty) {
+                        const custRef = snap.docs[0].ref;
+                        const existing = snap.docs[0].data();
+                        await fb.updateDoc(custRef, {
+                            name: order.name || existing.name,
+                            email: order.email || existing.email,
+                            address: order.address || existing.address,
+                            totalOrders: (existing.totalOrders || 0) + 1,
+                            totalSpent: (existing.totalSpent || 0) + (order.finalTotal || 0),
+                            lastOrderDate: order.created,
+                            updatedAt: new Date().toISOString()
+                        });
+                    } else {
+                        await fb.addDoc(fb.collection(db, 'customers'), {
+                            name: order.name,
+                            phone: phone,
+                            email: order.email || '',
+                            address: order.address || '',
+                            type: order.type,
+                            totalOrders: 1,
+                            totalSpent: order.finalTotal || 0,
+                            firstOrderDate: order.created,
+                            lastOrderDate: order.created,
+                            createdAt: new Date().toISOString(),
+                            smsOptIn: order.sms !== false,
+                            source: 'admin'
+                        });
+                    }
+                } catch (err) { console.warn('Customer save error:', err); }
+            })();
+        }
+    }
+
     if (order.sms && order.type === 'pickup') {
         const msg = SMS_TEMPLATES.reminder(order);
         smsLog.push({ to: order.name, message: msg, time: new Date().toISOString(), auto: true });
