@@ -662,10 +662,10 @@ function renderKanban() {
                     <span class="order-price">${o.price || '—'}</span>
                 </div>
                 <div class="order-actions">
-                    ${status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder(${o.id})">→ ${STATUS_LABELS[STATUSES[STATUSES.indexOf(status) + 1]] || 'Done'}</button>` : ''}
-                    <button class="order-btn" onclick="showDetail(${o.id})">Details</button>
-                    ${o.sms && status !== 'complete' ? `<button class="order-btn" onclick="quickText(${o.id})">📱</button>` : ''}
-                    ${status !== 'complete' ? `<button class="order-btn danger" onclick="deleteOrder(${o.id})">✕</button>` : ''}
+                    ${status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder('${o.id}')">→ ${STATUS_LABELS[STATUSES[STATUSES.indexOf(status) + 1]] || 'Done'}</button>` : ''}
+                    <button class="order-btn" onclick="showDetail('${o.id}')">Details</button>
+                    ${o.sms && status !== 'complete' ? `<button class="order-btn" onclick="quickText('${o.id}')">📱</button>` : ''}
+                    ${status !== 'complete' ? `<button class="order-btn danger" onclick="deleteOrder('${o.id}')">✕</button>` : ''}
                 </div>
             </div>
         `).join('');
@@ -694,8 +694,8 @@ function renderTable() {
             <td>${o.price || '—'}</td>
             <td>${new Date(o.created).toLocaleDateString()}</td>
             <td>
-                ${o.status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder(${o.id})">→</button>` : ''}
-                <button class="order-btn" onclick="showDetail(${o.id})">📋</button>
+                ${o.status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder('${o.id}')">→</button>` : ''}
+                <button class="order-btn" onclick="showDetail('${o.id}')">📋</button>
             </td>
         </tr>
     `).join('');
@@ -801,7 +801,7 @@ function createOrder(e) {
 }
 
 function advanceOrder(id) {
-    const order = orders.find(o => o.id === id);
+    const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
     const idx = STATUSES.indexOf(order.status);
     if (idx >= STATUSES.length - 1) return;
@@ -834,7 +834,7 @@ function advanceOrder(id) {
 }
 
 function deleteOrder(id) {
-    const order = orders.find(o => o.id === id);
+    const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
     if (!confirm(`Delete order for ${order.name}?`)) return;
     fbDeleteOrder(order);
@@ -880,15 +880,15 @@ function showDetail(id) {
             </select>
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;">
-            <button class="order-btn" onclick="quickText(${o.id})" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>
-            <button class="order-btn danger" onclick="deleteOrder(${o.id});closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
+            <button class="order-btn" onclick="quickText('${o.id}')" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>
+            <button class="order-btn danger" onclick="deleteOrder('${o.id}');closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
         </div>
     `;
     document.getElementById('detailModal').classList.add('active');
 }
 
 function changeStatus(id, newStatus) {
-    const order = orders.find(o => o.id === id);
+    const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
     order.status = newStatus;
     fbSaveOrder(order);
@@ -898,7 +898,7 @@ function changeStatus(id, newStatus) {
 }
 
 function quickText(id) {
-    const order = orders.find(o => o.id === id);
+    const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
     closeModal('detailModal');
     showTextModal(order.id);
@@ -917,7 +917,7 @@ function showTextModal(preselect) {
 function applyTemplate() {
     const tmpl = document.getElementById('txt_template').value;
     const orderId = parseInt(document.getElementById('txt_to').value);
-    const order = orders.find(o => o.id === orderId);
+    const order = orders.find(o => String(o.id) === String(orderId));
     if (tmpl && order && SMS_TEMPLATES[tmpl]) {
         document.getElementById('txt_message').value = SMS_TEMPLATES[tmpl](order);
     }
@@ -926,7 +926,7 @@ function applyTemplate() {
 function sendText() {
     const orderId = parseInt(document.getElementById('txt_to').value);
     const message = document.getElementById('txt_message').value.trim();
-    const order = orders.find(o => o.id === orderId);
+    const order = orders.find(o => String(o.id) === String(orderId));
     if (!order || !message) return;
 
     smsLog.push({ to: order.name, message: message, time: new Date().toISOString(), auto: false });
