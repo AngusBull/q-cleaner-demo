@@ -887,7 +887,7 @@ function createOrder(e) {
         items: getAdminItemsSummary(),
         itemDetails: JSON.parse(JSON.stringify(adminItems)),
         price: document.getElementById('o_price').value || document.getElementById('adminItemTotal').textContent,
-        status: 'new',
+        status: document.getElementById('o_type').value === 'pickup' ? 'new' : 'cleaning',
         priority: document.getElementById('o_priority').value,
         sms: document.getElementById('o_sms').checked,
         notes: document.getElementById('o_notes').value,
