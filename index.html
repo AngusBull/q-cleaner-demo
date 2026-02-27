@@ -1014,9 +1014,11 @@
         return DELIVERY_TOWNS.some(town => addr.includes(town));
     }
 
+    const PICKUP_SURCHARGE = 1.00; // per item for pickup orders
+
     async function submitOrder(form) {
-        const subtotal = custItems.reduce((s, it) => s + it.price * it.qty, 0);
         const isPickup = document.getElementById('serviceSelect').value === 'pickup';
+        const subtotal = custItems.reduce((s, it) => s + (it.price + (isPickup ? PICKUP_SURCHARGE : 0)) * it.qty, 0);
         const deliveryFee = (isPickup && subtotal < FREE_DELIVERY_MIN) ? DELIVERY_FEE : 0;
         const data = {
             name: form.querySelector('input[type="text"]').value,
@@ -1130,8 +1132,8 @@
             </div>
         `).join('');
         const totalItems = custItems.reduce((s, it) => s + it.qty, 0);
-        const subtotal = custItems.reduce((s, it) => s + it.price * it.qty, 0);
         const isPickup = document.getElementById('serviceSelect') && document.getElementById('serviceSelect').value === 'pickup';
+        const subtotal = custItems.reduce((s, it) => s + (it.price + (isPickup ? PICKUP_SURCHARGE : 0)) * it.qty, 0);
         const fee = (isPickup && subtotal > 0 && subtotal < FREE_DELIVERY_MIN) ? DELIVERY_FEE : 0;
         document.getElementById('custItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
         document.getElementById('custItemTotal').innerHTML = fee > 0
