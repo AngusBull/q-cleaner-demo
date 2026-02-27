@@ -302,6 +302,14 @@
         </div>
     </div>
 
+    <!-- ARCHIVED ORDERS -->
+    <div class="panel" id="archivedPanel" style="margin-top:20px;display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;">🗑️ Deleted Orders <span id="archivedCount" style="font-size:13px;font-weight:400;color:var(--text-light);"></span></h3>
+        </div>
+        <div id="archivedList"></div>
+    </div>
+
     <!-- CUSTOMERS PANEL -->
     <div class="panel" style="margin-top:20px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -701,23 +709,27 @@ async function fbDeleteOrder(order) {
 }
 
 // ========== RENDERING ==========
+function activeOrders() { return orders.filter(o => !o.archived); }
+
 function render() {
     renderStats();
     renderKanban();
     renderTable();
     renderSmsLog();
     renderRoute();
+    renderArchived();
 }
 
 function renderStats() {
-    const today = orders.filter(o => o.status !== 'complete');
-    const pickups = orders.filter(o => o.type === 'pickup' && o.status === 'new');
-    const readyDeliver = orders.filter(o => o.type === 'pickup' && o.status === 'ready');
-    const weekRevenue = orders.reduce((sum, o) => sum + parseFloat((o.price || '0').replace(/[^0-9.]/g, '') || 0), 0);
+    const active = activeOrders();
+    const today = active.filter(o => o.status !== 'complete');
+    const pickups = active.filter(o => o.type === 'pickup' && o.status === 'new');
+    const readyDeliver = active.filter(o => o.type === 'pickup' && o.status === 'ready');
+    const weekRevenue = active.reduce((sum, o) => sum + parseFloat((o.price || '0').replace(/[^0-9.]/g, '') || 0), 0);
     const todaySms = smsLog.filter(s => new Date(s.time).toDateString() === new Date().toDateString());
 
     document.getElementById('statsBar').innerHTML = `
-        <div class="stat-card"><div class="stat-label">Active Orders</div><div class="stat-value">${today.length}</div><div class="stat-sub">${orders.filter(o=>o.type==='pickup'&&o.status!=='complete').length} pickup, ${orders.filter(o=>o.type==='walkin'&&o.status!=='complete').length} walk-in</div></div>
+        <div class="stat-card"><div class="stat-label">Active Orders</div><div class="stat-value">${today.length}</div><div class="stat-sub">${active.filter(o=>o.type==='pickup'&&o.status!=='complete').length} pickup, ${active.filter(o=>o.type==='walkin'&&o.status!=='complete').length} walk-in</div></div>
         <div class="stat-card"><div class="stat-label">Pending Pickup</div><div class="stat-value" style="color:var(--blue)">${pickups.length}</div><div class="stat-sub">${pickups.length > 0 ? 'Next: ' + (pickups[0].pickupTime || 'TBD') : 'None scheduled'}</div></div>
         <div class="stat-card"><div class="stat-label">Ready for Delivery</div><div class="stat-value" style="color:var(--orange)">${readyDeliver.length}</div><div class="stat-sub">${readyDeliver.length > 0 ? readyDeliver.length + ' stops' : 'All delivered'}</div></div>
         <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" style="color:var(--green)">$${weekRevenue.toFixed(0)}</div><div class="stat-sub">All orders</div></div>
@@ -734,8 +746,9 @@ function toggleComplete() {
 
 function renderKanban() {
     const COMPLETE_LIMIT = 3;
+    const active = activeOrders();
     const cols = STATUSES.map(status => {
-        let statusOrders = orders.filter(o => o.status === status);
+        let statusOrders = active.filter(o => o.status === status);
         // Sort complete by most recent first, limit display
         const totalComplete = statusOrders.length;
         let showMoreBtn = '';
@@ -798,7 +811,7 @@ function renderKanban() {
 }
 
 function renderTable() {
-    const rows = orders.map(o => `
+    const rows = activeOrders().map(o => `
         <tr>
             <td><strong>${o.name}</strong>${o.address ? `<br><span style="font-size:11px;color:var(--text-light)">${o.address}</span>` : ''}</td>
             <td>${o.phone}</td>
@@ -954,12 +967,60 @@ function advanceOrder(id) {
 function deleteOrder(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) return;
-    if (!confirm(`Delete order for ${order.name}?`)) return;
-    fbDeleteOrder(order);
-    orders = orders.filter(o => o.id !== id);
+    if (!confirm(`Delete order for ${order.name}? It can be restored from the Deleted section.`)) return;
+    order.archived = true;
+    order.archivedAt = new Date().toISOString();
+    fbSaveOrder(order);
     save();
     render();
-    showToast(`🗑️ Order deleted`);
+    renderArchived();
+    showToast(`🗑️ Order archived — can be restored`);
+}
+
+function restoreOrder(id) {
+    const order = orders.find(o => String(o.id) === String(id));
+    if (!order) return;
+    delete order.archived;
+    delete order.archivedAt;
+    fbSaveOrder(order);
+    save();
+    render();
+    renderArchived();
+    showToast(`✅ Order restored for ${order.name}`);
+}
+
+function permanentDelete(id) {
+    const order = orders.find(o => String(o.id) === String(id));
+    if (!order) return;
+    if (!confirm(`Permanently delete order for ${order.name}? This cannot be undone.`)) return;
+    fbDeleteOrder(order);
+    orders = orders.filter(o => String(o.id) !== String(id));
+    save();
+    renderArchived();
+    showToast(`🗑️ Permanently deleted`);
+}
+
+function renderArchived() {
+    const panel = document.getElementById('archivedPanel');
+    if (!panel) return;
+    const archived = orders.filter(o => o.archived);
+    if (archived.length === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+    panel.style.display = 'block';
+    document.getElementById('archivedList').innerHTML = archived.map(o => {
+        const daysAgo = Math.floor((Date.now() - new Date(o.archivedAt).getTime()) / 86400000);
+        return `<div class="cust-row">
+            <div style="flex:1;">
+                <div class="cust-name">${o.name}</div>
+                <div class="cust-detail">${o.items || o.itemsSummary || '—'} · ${o.price || '—'} · Deleted ${daysAgo === 0 ? 'today' : daysAgo + 'd ago'}</div>
+            </div>
+            <button class="order-btn advance" onclick="restoreOrder('${o.id}')" style="padding:6px 12px;">↩ Restore</button>
+            <button class="order-btn danger" onclick="permanentDelete('${o.id}')" style="padding:6px 12px;">✕</button>
+        </div>`;
+    }).join('');
+    document.getElementById('archivedCount').textContent = archived.length;
 }
 
 function showDetail(id) {
