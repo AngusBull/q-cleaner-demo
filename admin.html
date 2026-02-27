@@ -190,6 +190,17 @@
         .item-note-input:focus { outline: none; background: #fafafa; }
         .item-picker-footer { padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
         .item-picker-footer .total { font-weight: 700; color: var(--green-dark); }
+        /* CUSTOMERS */
+        .cust-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .cust-row:last-child { border-bottom: none; }
+        .cust-avatar { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; background: var(--green-pale); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--green-dark); }
+        .cust-info { flex: 1; }
+        .cust-name { font-size: 14px; font-weight: 600; }
+        .cust-detail { font-size: 12px; color: var(--text-light); }
+        .cust-stats { text-align: right; }
+        .cust-stats .orders { font-size: 14px; font-weight: 600; color: var(--green-dark); }
+        .cust-stats .spent { font-size: 12px; color: var(--text-light); }
+
         /* REPORTS */
         .reports-view { padding: 8px 0; }
         .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
@@ -289,6 +300,18 @@
             <h3>🗺️ Today's Route</h3>
             <div id="routeContent"></div>
         </div>
+    </div>
+
+    <!-- CUSTOMERS PANEL -->
+    <div class="panel" style="margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;">👥 Customers</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="custSearch" placeholder="Search by name or phone..." oninput="filterCustomers()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;width:200px;">
+                <span id="custCount" style="font-size:12px;color:var(--text-light);"></span>
+            </div>
+        </div>
+        <div id="customerList" style="max-height:400px;overflow-y:auto;"></div>
     </div>
 </div>
 
@@ -577,6 +600,17 @@ async function initFirebase() {
             nextId = Math.max(0, ...orders.filter(o=>typeof o.id==='number').map(o => o.id)) + 1;
             save();
             render();
+        });
+        // Real-time customer listener
+        fb.onSnapshot(fb.collection(db, 'customers'), (snapshot) => {
+            window._customers = [];
+            snapshot.forEach(doc => {
+                const c = doc.data();
+                c._fbId = doc.id;
+                window._customers.push(c);
+            });
+            window._customers.sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0));
+            renderCustomerList();
         });
     } catch(e) { console.warn('Firebase init failed, using localStorage only:', e); }
 }
@@ -1121,6 +1155,77 @@ function sendText() {
 }
 
 // ========== UI HELPERS ==========
+// ===== CUSTOMERS =====
+function renderCustomerList(filter) {
+    const list = document.getElementById('customerList');
+    const countEl = document.getElementById('custCount');
+    if (!list) return;
+    let customers = window._customers || [];
+    if (filter) {
+        const f = filter.toLowerCase();
+        customers = customers.filter(c =>
+            (c.name || '').toLowerCase().includes(f) ||
+            (c.phone || '').includes(f.replace(/[^0-9]/g, '')) ||
+            (c.email || '').toLowerCase().includes(f) ||
+            (c.address || '').toLowerCase().includes(f)
+        );
+    }
+    if (countEl) countEl.textContent = customers.length + ' customer' + (customers.length !== 1 ? 's' : '');
+    if (customers.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa;font-size:14px;">No customers yet. They\'ll appear here as orders come in.</div>';
+        return;
+    }
+    list.innerHTML = customers.map(c => {
+        const initials = (c.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        const lastOrder = c.lastOrderDate ? new Date(c.lastOrderDate).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—';
+        return `
+            <div class="cust-row">
+                <div class="cust-avatar">${initials}</div>
+                <div class="cust-info">
+                    <div class="cust-name">${c.name || 'Unknown'}</div>
+                    <div class="cust-detail">${formatPhone(c.phone || '')}${c.email ? ' · ' + c.email : ''}${c.address ? '<br>📍 ' + c.address : ''}</div>
+                </div>
+                <div class="cust-stats">
+                    <div class="orders">${c.totalOrders || 0} orders</div>
+                    <div class="spent">$${Number(c.totalSpent || 0).toFixed(0)} · Last: ${lastOrder}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterCustomers() {
+    const search = document.getElementById('custSearch');
+    renderCustomerList(search ? search.value : '');
+}
+
+function formatPhone(phone) {
+    if (phone.length === 10) return '(' + phone.slice(0,3) + ') ' + phone.slice(3,6) + '-' + phone.slice(6);
+    return phone;
+}
+
+// ===== ADMIN NEW ORDER PHONE LOOKUP =====
+function setupAdminPhoneLookup() {
+    const phoneInput = document.getElementById('o_phone');
+    if (!phoneInput) return;
+    phoneInput.addEventListener('input', function() {
+        const phone = this.value.replace(/[^0-9]/g, '').slice(-10);
+        if (phone.length === 10 && window._customers) {
+            const cust = window._customers.find(c => c.phone === phone);
+            if (cust) {
+                const nameInput = document.getElementById('o_name');
+                const emailInput = document.getElementById('o_email');
+                const addrInput = document.getElementById('o_address');
+                if (nameInput && !nameInput.value) nameInput.value = cust.name || '';
+                if (emailInput && !emailInput.value) emailInput.value = cust.email || '';
+                if (addrInput && !addrInput.value) addrInput.value = cust.address || '';
+                showToast(`👋 Found: ${cust.name} (${cust.totalOrders || 0} orders)`);
+            }
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(setupAdminPhoneLookup, 1000));
+
 let reportPeriod = '30'; // default 30 days
 
 function setReportPeriod(period) {

@@ -989,13 +989,88 @@
     async function initFirebase() {
         try {
             const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js');
-            const { getFirestore, collection, addDoc } = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js');
+            const fb = await import('https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js');
             const app = initializeApp(FIREBASE_CONFIG);
-            db = getFirestore(app);
-            window._fb = { collection, addDoc };
+            db = fb.getFirestore(app);
+            window._fb = fb;
         } catch(e) { console.warn('Firebase init failed:', e); }
     }
     initFirebase();
+
+    // ===== CUSTOMER LOOKUP =====
+    function normalizePhone(phone) {
+        return phone.replace(/[^0-9]/g, '').slice(-10);
+    }
+
+    let customerLookupTimeout = null;
+    let currentCustomer = null;
+
+    function setupPhoneLookup() {
+        const phoneInput = document.querySelector('.contact-form input[type="tel"]');
+        if (!phoneInput) return;
+        phoneInput.addEventListener('input', function() {
+            clearTimeout(customerLookupTimeout);
+            const phone = normalizePhone(this.value);
+            if (phone.length === 10 && db && window._fb) {
+                customerLookupTimeout = setTimeout(() => lookupCustomer(phone), 500);
+            } else {
+                hideCustomerBanner();
+            }
+        });
+    }
+
+    async function lookupCustomer(phone) {
+        try {
+            const fb = window._fb;
+            const q = fb.query(fb.collection(db, 'customers'), fb.where('phone', '==', phone));
+            const snap = await fb.getDocs(q);
+            if (!snap.empty) {
+                const cust = snap.docs[0].data();
+                cust._fbId = snap.docs[0].id;
+                currentCustomer = cust;
+                autofillCustomer(cust);
+                showCustomerBanner(cust);
+            } else {
+                currentCustomer = null;
+                hideCustomerBanner();
+            }
+        } catch(e) { console.warn('Customer lookup failed:', e); }
+    }
+
+    function autofillCustomer(cust) {
+        const form = document.querySelector('.contact-form form');
+        if (!form) return;
+        const nameInput = form.querySelector('input[type="text"]');
+        const emailInput = form.querySelector('input[type="email"]');
+        if (nameInput && cust.name && !nameInput.value) nameInput.value = cust.name;
+        if (emailInput && cust.email && !emailInput.value) emailInput.value = cust.email;
+        if (cust.address) {
+            const addrInput = document.querySelector('#pickupFields input[type="text"]');
+            if (addrInput && !addrInput.value) addrInput.value = cust.address;
+        }
+    }
+
+    function showCustomerBanner(cust) {
+        let banner = document.getElementById('custBanner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'custBanner';
+            banner.style.cssText = 'background:var(--plum-pale);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;';
+            const form = document.querySelector('.contact-form form');
+            form.insertBefore(banner, form.firstChild);
+        }
+        banner.innerHTML = `<span style="font-size:20px;">👋</span><div><strong>Welcome back, ${cust.name ? cust.name.split(' ')[0] : 'friend'}!</strong><div style="font-size:12px;color:var(--text-light);">${cust.totalOrders || 0} previous order${(cust.totalOrders||0) !== 1 ? 's' : ''}${cust.totalSpent ? ' · $' + Number(cust.totalSpent).toFixed(0) + ' lifetime' : ''}</div></div>`;
+        banner.style.display = 'flex';
+    }
+
+    function hideCustomerBanner() {
+        const banner = document.getElementById('custBanner');
+        if (banner) banner.style.display = 'none';
+        currentCustomer = null;
+    }
+
+    // Init phone lookup after Firebase loads
+    setTimeout(setupPhoneLookup, 2000);
 
     const DELIVERY_TOWNS = ['acton', 'concord', 'sudbury', 'maynard', 'littleton'];
     const DELIVERY_FEE = 5.99;
@@ -1066,7 +1141,45 @@
 
         if (db && window._fb) {
             try {
-                await window._fb.addDoc(window._fb.collection(db, 'orders'), data);
+                const fb = window._fb;
+                await fb.addDoc(fb.collection(db, 'orders'), data);
+
+                // Save/update customer record
+                const phone = normalizePhone(data.phone);
+                if (phone.length === 10) {
+                    const q = fb.query(fb.collection(db, 'customers'), fb.where('phone', '==', phone));
+                    const snap = await fb.getDocs(q);
+                    if (!snap.empty) {
+                        // Update existing customer
+                        const custRef = snap.docs[0].ref;
+                        const existing = snap.docs[0].data();
+                        await fb.updateDoc(custRef, {
+                            name: data.name || existing.name,
+                            email: data.email || existing.email,
+                            address: data.address || existing.address,
+                            totalOrders: (existing.totalOrders || 0) + 1,
+                            totalSpent: (existing.totalSpent || 0) + data.estimatedTotal,
+                            lastOrderDate: data.created,
+                            updatedAt: new Date().toISOString()
+                        });
+                    } else {
+                        // Create new customer
+                        await fb.addDoc(fb.collection(db, 'customers'), {
+                            name: data.name,
+                            phone: phone,
+                            email: data.email || '',
+                            address: data.address || '',
+                            type: data.type,
+                            totalOrders: 1,
+                            totalSpent: data.estimatedTotal,
+                            firstOrderDate: data.created,
+                            lastOrderDate: data.created,
+                            createdAt: new Date().toISOString(),
+                            smsOptIn: data.sms !== false,
+                            source: 'website'
+                        });
+                    }
+                }
             } catch(e) { console.warn('Firestore write failed:', e); }
         }
         return data;
