@@ -796,10 +796,10 @@
                             <div style="font-size:14px;color:var(--plum-dark);"><strong>🚗 Pickup & Delivery:</strong> 9–11 AM, Mon–Sat</div>
                             <div style="font-size:12px;color:var(--text-light);margin-top:4px;">Leave your garment bag on the porch — Kim picks up and delivers back on her route, usually within 48 hours.</div>
                         </div>
-                        <div class="form-group" style="display:flex;align-items:center;gap:8px;">
-                            <input type="checkbox" id="smsOpt" checked style="width:auto;">
-                            <label for="smsOpt" style="margin:0;font-weight:400;font-size:14px;">Text me updates about my order</label>
-                        </div>
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="smsOpt" checked style="width:auto;">
+                        <label for="smsOpt" style="margin:0;font-weight:400;font-size:14px;">Text me updates about my order</label>
                     </div>
                     <div class="form-group">
                         <label>Your Items</label>
@@ -1105,9 +1105,11 @@
             deliveryFee: deliveryFee,
             tax: Math.round((subtotal + deliveryFee) * MA_TAX_RATE * 100) / 100,
             estimatedTotal: Math.round((subtotal + deliveryFee) * (1 + MA_TAX_RATE) * 100) / 100,
+            finalTotal: Math.round((subtotal + deliveryFee) * (1 + MA_TAX_RATE) * 100) / 100,
+            price: '$' + (Math.round((subtotal + deliveryFee) * (1 + MA_TAX_RATE) * 100) / 100).toFixed(2),
             status: 'new',
             priority: 'normal',
-            sms: true,
+            sms: document.getElementById('smsOpt') ? document.getElementById('smsOpt').checked : false,
             notes: form.querySelector('textarea').value || '',
             created: new Date().toISOString()
         };
@@ -1116,7 +1118,7 @@
             data.address = inputs[0] ? inputs[0].value : '';
             data.pickupDay = inputs[1] ? inputs[1].value : '';
             data.pickupTime = '9 AM – 11 AM';
-            data.sms = document.getElementById('smsOpt') ? document.getElementById('smsOpt').checked : true;
+            // sms already set from checkbox above
             // Calculate due date: 48hrs from pickup day
             if (data.pickupDay) {
                 const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -1145,7 +1147,7 @@
         } else {
             data.confirmSms = `Hi ${firstName}! 👋 Your order with Q Cleaner & Tailor has been received. ${itemList} — Est. $${data.estimatedTotal.toFixed(2)}. We'll text you when it's ready for pickup at 159A Great Rd, Acton. Questions? Call 978-407-7554`;
         }
-        data.smsPending = true; // Flag for Twilio to pick up
+        data.smsPending = data.sms !== false; // Only queue SMS if customer opted in
 
         if (db && window._fb) {
             try {

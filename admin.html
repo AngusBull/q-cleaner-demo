@@ -661,7 +661,7 @@ async function initFirebase() {
                 if (!d.items && d.itemsSummary) d.items = d.itemsSummary;
                 if (!d.items && d.itemDetails) d.items = d.itemDetails.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', ');
                 // Log confirmation SMS for new orders from website
-                if (d.smsPending && d.confirmSms && !smsLog.find(s => s.orderId === doc.id)) {
+                if (d.sms !== false && d.smsPending && d.confirmSms && !smsLog.find(s => s.orderId === doc.id)) {
                     smsLog.push({ to: d.name, message: d.confirmSms, time: d.created, auto: true, orderId: doc.id, status: 'pending_twilio' });
                     showToast(`🆕 New order from ${d.name}!`);
                 }
@@ -1286,6 +1286,7 @@ function showDetail(id) {
             <div class="detail-section"><div class="detail-label">Email</div><div class="detail-value">${o.email || '—'}</div></div>
             <div class="detail-section"><div class="detail-label">Type</div><div class="detail-value">${o.type === 'pickup' ? '🚗 Pickup & Delivery' : 'Walk-in'}</div></div>
             <div class="detail-section"><div class="detail-label">Priority</div><div class="detail-value">${o.priority === 'rush' ? '⚡ Rush' : 'Normal'}</div></div>
+            <div class="detail-section"><div class="detail-label">Text Updates</div><div class="detail-value">${o.sms === false ? '<span style="color:#e74c3c;font-weight:600;">🚫 No texts — customer opted out</span>' : '✅ Yes'}</div></div>
         </div>
         ${o.address ? `<div class="detail-section"><div class="detail-label">Address</div><div class="detail-value">${o.address}</div></div>` : ''}
         ${o.pickupDay ? `<div class="detail-grid"><div class="detail-section"><div class="detail-label">Pickup Day</div><div class="detail-value">${o.pickupDay}</div></div><div class="detail-section"><div class="detail-label">Time</div><div class="detail-value">${o.pickupTime || 'TBD'}</div></div></div>` : ''}
@@ -1332,7 +1333,7 @@ function showDetail(id) {
             </select>
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;">
-            <button class="order-btn" onclick="quickText('${o._fbId||o.id}')" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>
+            ${o.sms !== false ? `<button class="order-btn" onclick="quickText('${o._fbId||o.id}')" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>` : ''}
             <button class="order-btn danger" onclick="if(deleteOrder('${o._fbId||o.id}')!==false)closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
         </div>
     `;
