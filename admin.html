@@ -1207,7 +1207,7 @@ function renderArchived() {
 }
 
 function showDetail(id) {
-    const o = orders.find(x => String(x.id) === String(id));
+    const o = findOrder(id);
     if (!o) return;
     document.getElementById('detail_title').innerHTML = '<span style="color:#aaa;font-weight:400;font-size:14px;">#' + String(o.ticketNum||0).padStart(4,'0') + '</span> ' + o.name;
     document.getElementById('detailContent').innerHTML = `
