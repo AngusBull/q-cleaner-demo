@@ -661,7 +661,9 @@ async function initFirebase() {
                 if (local && local.archivedAt && !o.archivedAt) o.archivedAt = local.archivedAt;
             });
             const fbIds = new Set(fbOrders.map(o => o._fbId));
-            orders = [...fbOrders, ...orders.filter(o => !o._fbId && !fbIds.has(o.id))];
+            // Only keep local orders that were never saved to Firebase (no _fbId and id not matching any FB doc)
+            const fbIdValues = new Set(fbOrders.map(o => String(o.id)));
+            orders = [...fbOrders, ...orders.filter(o => !o._fbId && !fbIds.has(o.id) && !fbIdValues.has(String(o.id)))];
             nextId = Math.max(0, ...orders.filter(o=>typeof o.id==='number').map(o => o.id)) + 1;
             save();
             render();
@@ -1139,8 +1141,10 @@ function permanentDelete(id) {
     if (!order) return;
     if (!confirm(`Permanently delete order for ${order.name}? This cannot be undone.`)) return;
     fbDeleteOrder(order);
+    markLocalDeleted(order);
     orders = orders.filter(o => String(o.id) !== String(id));
     save();
+    render();
     renderArchived();
     showToast(`🗑️ Permanently deleted`);
 }
