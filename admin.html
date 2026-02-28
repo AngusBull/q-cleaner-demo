@@ -268,6 +268,7 @@
         <h2 style="margin:0 0 4px;color:#1A4232;font-family:Inter,sans-serif;">Q Cleaner & Tailor</h2>
         <p style="margin:0 0 24px;color:#666;font-size:14px;">Admin Dashboard</p>
         <input type="password" id="authPassword" placeholder="Enter password" autofocus
+            autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false"
             style="width:100%;padding:14px 16px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='#2D6B4F'" onblur="this.style.borderColor='#ddd'">
         <div id="authError" style="color:#EF4444;font-size:13px;margin-top:8px;min-height:20px;"></div>
@@ -289,7 +290,7 @@ async function sha256(text) {
     return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 async function tryLogin() {
-    const pw = document.getElementById('authPassword').value;
+    const pw = document.getElementById('authPassword').value.trim();
     const hash = await sha256(pw);
     if (hash === AUTH_HASH) {
         sessionStorage.setItem('qc_auth', 'true');
