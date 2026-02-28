@@ -715,29 +715,13 @@ const SMS_TEMPLATES = {
 function loadOrders() {
     const saved = localStorage.getItem('q_orders');
     if (saved) return JSON.parse(saved);
-    // Seed with demo data
-    return [
-        { id: 1, name: 'Sarah Mitchell', phone: '(978) 555-1234', email: 'sarah@email.com', type: 'pickup', address: '42 Elm Street, Acton', pickupDay: 'Today', pickupTime: '9 AM – 11 AM', items: '2 Suits, 4 Shirts, 1 Dress', price: '$65', status: 'new', priority: 'normal', sms: true, notes: '', due: '', created: new Date().toISOString() },
-        { id: 2, name: 'David Chen', phone: '(978) 555-2345', email: '', type: 'pickup', address: '18 Main St, Concord', pickupDay: 'Today', pickupTime: '11 AM – 1 PM', items: '1 Comforter, Wash & Fold 8lb', price: '$50', status: 'new', priority: 'normal', sms: true, notes: '', due: '', created: new Date().toISOString() },
-        { id: 3, name: 'Lisa Park', phone: '(978) 555-3456', email: '', type: 'walkin', address: '', pickupDay: '', pickupTime: '', items: 'Wedding Gown Alteration', price: '$185', status: 'new', priority: 'normal', sms: true, notes: 'Bride fitting March 15', due: '', created: new Date().toISOString() },
-        { id: 4, name: 'Tom Bradley', phone: '(978) 555-4567', email: '', type: 'pickup', address: '7 Concord Rd, Acton', pickupDay: '', pickupTime: '', items: '3 Shirts, 2 Pants', price: '$42', status: 'pickedup', priority: 'normal', sms: true, notes: '', due: '', created: new Date(Date.now() - 3600000).toISOString() },
-        { id: 5, name: 'Amy Foster', phone: '(978) 555-5678', email: '', type: 'walkin', address: '', pickupDay: '', pickupTime: '', items: 'Prom Dress Alteration', price: '$55', status: 'cleaning', priority: 'rush', sms: true, notes: 'Need by tomorrow!', due: '', created: new Date(Date.now() - 86400000).toISOString() },
-        { id: 6, name: 'Jennifer Adams', phone: '(978) 555-6789', email: '', type: 'pickup', address: '91 Parker St, Maynard', pickupDay: '', pickupTime: '', items: '5 Shirts, 3 Pants, 1 Jacket', price: '$68', status: 'cleaning', priority: 'normal', sms: true, notes: '', due: '', created: new Date(Date.now() - 86400000).toISOString() },
-        { id: 7, name: 'Karen Wells', phone: '(978) 555-7890', email: '', type: 'pickup', address: '55 Great Rd, Acton', pickupDay: '', pickupTime: '', items: '2 Dresses, 1 Blouse', price: '$38', status: 'ready', priority: 'normal', sms: true, notes: '', due: '', created: new Date(Date.now() - 172800000).toISOString() },
-        { id: 8, name: 'James Wilson', phone: '(978) 555-8901', email: '', type: 'pickup', address: '12 Brook Rd, Sudbury', pickupDay: '', pickupTime: '', items: '4 Shirts, 2 Suits', price: '$52', status: 'ready', priority: 'normal', sms: true, notes: '', due: '', created: new Date(Date.now() - 172800000).toISOString() },
-        { id: 9, name: 'Nancy Cooper', phone: '(978) 555-9012', email: '', type: 'walkin', address: '', pickupDay: '', pickupTime: '', items: '1 Coat, Zipper Repair', price: '$32', status: 'ready', priority: 'normal', sms: true, notes: '', due: '', created: new Date(Date.now() - 86400000).toISOString() },
-        { id: 10, name: 'Brian Murphy', phone: '(978) 555-0123', email: '', type: 'pickup', address: '33 School St, Acton', pickupDay: '', pickupTime: '', items: '3 Shirts, 1 Suit', price: '$35', status: 'complete', priority: 'normal', sms: true, notes: '', due: '', created: new Date(Date.now() - 259200000).toISOString() },
-    ];
+    return [];
 }
 
 function loadSmsLog() {
     const saved = localStorage.getItem('q_sms');
     if (saved) return JSON.parse(saved);
-    return [
-        { to: 'Sarah Mitchell', message: 'Hi Sarah! 👋 Reminder: leave your garment bag out by 9 AM. Kim will swing by today.', time: new Date().toISOString(), auto: true },
-        { to: 'Karen Wells', message: 'Your order is ready! ✨ Kim will deliver soon.', time: new Date(Date.now() - 1800000).toISOString(), auto: true },
-        { to: 'Brian Murphy', message: 'Delivered! Hanging on your front door. Have a great day! 💚', time: new Date(Date.now() - 3600000).toISOString(), auto: true },
-    ];
+    return [];
 }
 
 let orders = loadOrders();
