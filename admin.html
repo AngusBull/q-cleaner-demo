@@ -276,6 +276,12 @@
     </div>
 </div>
 <script>
+// Clear all local data if ?reset is in URL
+if (window.location.search.includes('reset')) {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = window.location.pathname;
+}
 const AUTH_HASH = 'e89ad42e3f55c0730ad770d77f9f006d79d51feb51932c70f1b582e4d44b0cf5';
 async function sha256(text) {
     const data = new TextEncoder().encode(text);
