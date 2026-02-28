@@ -794,11 +794,12 @@ function renderStats() {
     const pickups = active.filter(o => o.type === 'pickup' && o.status === 'new');
     const readyDeliver = active.filter(o => o.type === 'pickup' && o.status === 'ready');
     const weekRevenue = active.reduce((sum, o) => {
-        if (o.chargedAmount) return sum + Number(o.chargedAmount);
-        if (o.finalTotal) return sum + Number(o.finalTotal);
-        if (o.estimatedTotal) return sum + Number(o.estimatedTotal);
+        const tax = Number(o.tax || 0);
+        if (o.chargedAmount) return sum + Number(o.chargedAmount) - tax;
+        if (o.finalTotal) return sum + Number(o.finalTotal) - tax;
+        if (o.estimatedTotal) return sum + Number(o.estimatedTotal) - tax;
         const p = String(o.price || '0').replace(/[^0-9.]/g, '');
-        return sum + (parseFloat(p) || 0);
+        return sum + (parseFloat(p) || 0) - tax;
     }, 0);
     const todaySms = smsLog.filter(s => new Date(s.time).toDateString() === new Date().toDateString());
 
@@ -1534,13 +1535,14 @@ function renderReports() {
     const prevPeriodOrders = reportPeriod === 'all' ? [] : _ao.filter(o => o.created >= prevPeriodStart && o.created < periodStart);
     const periodLabel = reportPeriod === '7' ? 'This Week' : reportPeriod === '30' ? 'This Month' : reportPeriod === '90' ? 'Last 90 Days' : reportPeriod === '365' ? 'This Year' : 'All Time';
 
-    // Helper to get revenue from an order
+    // Helper to get revenue from an order (excludes tax)
     const getRevenue = (o) => {
-        if (o.chargedAmount) return Number(o.chargedAmount);
-        if (o.finalTotal) return Number(o.finalTotal);
-        if (o.estimatedTotal) return Number(o.estimatedTotal);
+        const tax = Number(o.tax || 0);
+        if (o.chargedAmount) return Number(o.chargedAmount) - tax;
+        if (o.finalTotal) return Number(o.finalTotal) - tax;
+        if (o.estimatedTotal) return Number(o.estimatedTotal) - tax;
         const p = String(o.price || '0').replace(/[^0-9.]/g, '');
-        return parseFloat(p) || 0;
+        return (parseFloat(p) || 0) - tax;
     };
 
     // Revenue
