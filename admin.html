@@ -1902,6 +1902,8 @@ function calcDefaultDue(priority, pickupDay) {
 }
 function showNewOrder() { 
     document.getElementById('newOrderModal').classList.add('active');
+    document.getElementById('o_type').value = 'walkin';
+    document.getElementById('pickupFields').style.display = 'none';
     document.getElementById('o_due').value = calcDefaultDue('normal');
     document.getElementById('o_name').focus();
 }
