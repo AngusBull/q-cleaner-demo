@@ -776,6 +776,7 @@ function markLocalDeleted(order) {
     if (order._fbId) _deletedIds.add(String(order._fbId));
     localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
 }
+function findOrder(id) { return orders.find(o => String(o._fbId) === String(id) || String(o.id) === String(id)); }
 function activeOrders() { return orders.filter(o => !o.archived && !_deletedIds.has(String(o.id)) && !_deletedIds.has(String(o._fbId))); }
 
 function render() {
@@ -843,7 +844,7 @@ function renderKanban() {
                 </div>
                 <div class="order-meta">${timeAgo(o.created)}${(o.paymentStatus === 'charged' || o.paymentStatus === 'paid-in-store') ? ' · ✅ Paid' : ''}</div>
                 <div class="order-actions">
-                    <button class="order-btn" onclick="showDetail('${o.id}')">Details</button>
+                    <button class="order-btn" onclick="showDetail('${o._fbId||o.id}')">Details</button>
                 </div>
             </div>
         ` : `
@@ -861,10 +862,10 @@ function renderKanban() {
                     <span class="order-price">${o.price || '—'}</span>
                 </div>
                 <div class="order-actions">
-                    <button class="order-btn advance" onclick="advanceOrder('${o.id}')">→ ${(function(){ let n = STATUSES.indexOf(status) + 1; if (o.type !== 'pickup' && STATUSES[n] === 'pickedup') n++; return STATUS_LABELS[STATUSES[n]] || 'Done'; })()}</button>
-                    <button class="order-btn" onclick="showDetail('${o.id}')">Details</button>
-                    ${o.sms && status !== 'complete' ? `<button class="order-btn" onclick="quickText('${o.id}')">📱</button>` : ''}
-                    ${status !== 'complete' ? `<button class="order-btn danger" onclick="deleteOrder('${o.id}')">✕</button>` : ''}
+                    <button class="order-btn advance" onclick="advanceOrder('${o._fbId||o.id}')">→ ${(function(){ let n = STATUSES.indexOf(status) + 1; if (o.type !== 'pickup' && STATUSES[n] === 'pickedup') n++; return STATUS_LABELS[STATUSES[n]] || 'Done'; })()}</button>
+                    <button class="order-btn" onclick="showDetail('${o._fbId||o.id}')">Details</button>
+                    ${o.sms && status !== 'complete' ? `<button class="order-btn" onclick="quickText('${o._fbId||o.id}')">📱</button>` : ''}
+                    ${status !== 'complete' ? `<button class="order-btn danger" onclick="deleteOrder('${o._fbId||o.id}')">✕</button>` : ''}
                 </div>
             </div>
         `).join('');
@@ -894,8 +895,8 @@ function renderTable() {
             <td>${o.price || '—'}</td>
             <td>${new Date(o.created).toLocaleDateString()}</td>
             <td>
-                ${o.status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder('${o.id}')">→</button>` : ''}
-                <button class="order-btn" onclick="showDetail('${o.id}')">📋</button>
+                ${o.status !== 'complete' ? `<button class="order-btn advance" onclick="advanceOrder('${o._fbId||o.id}')">→</button>` : ''}
+                <button class="order-btn" onclick="showDetail('${o._fbId||o.id}')">📋</button>
             </td>
         </tr>
     `).join('');
@@ -1068,7 +1069,7 @@ function createOrder(e) {
 }
 
 function advanceOrder(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     const idx = STATUSES.indexOf(order.status);
     if (idx >= STATUSES.length - 1) return;
@@ -1105,14 +1106,19 @@ function advanceOrder(id) {
 }
 
 async function deleteOrder(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) { alert('Order not found (id: ' + id + ')'); return false; }
     if (!confirm('Delete order for ' + order.name + '?')) return false;
     order.archived = true;
     order.archivedAt = new Date().toISOString();
     markLocalDeleted(order);
-    // Remove from orders array entirely
-    orders = orders.filter(o => String(o.id) !== String(id));
+    // Remove from orders array — use _fbId for precision if available, fall back to id
+    const targetFbId = order._fbId;
+    const targetId = order.id;
+    orders = orders.filter(o => {
+        if (targetFbId && o._fbId) return o._fbId !== targetFbId;
+        return String(o.id) !== String(targetId);
+    });
     save();
     render();
     showToast('🗑️ Order deleted');
@@ -1126,7 +1132,7 @@ async function deleteOrder(id) {
 }
 
 function restoreOrder(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     delete order.archived;
     delete order.archivedAt;
@@ -1142,12 +1148,17 @@ function restoreOrder(id) {
 }
 
 function permanentDelete(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     if (!confirm(`Permanently delete order for ${order.name}? This cannot be undone.`)) return;
     fbDeleteOrder(order);
     markLocalDeleted(order);
-    orders = orders.filter(o => String(o.id) !== String(id));
+    const tFbId = order._fbId;
+    const tId = order.id;
+    orders = orders.filter(o => {
+        if (tFbId && o._fbId) return o._fbId !== tFbId;
+        return String(o.id) !== String(tId);
+    });
     save();
     render();
     renderArchived();
@@ -1188,8 +1199,8 @@ function renderArchived() {
                 <div class="cust-name">${o.name}</div>
                 <div class="cust-detail">${o.items || o.itemsSummary || '—'} · ${o.price || '—'} · Deleted ${daysAgo === 0 ? 'today' : daysAgo + 'd ago'}</div>
             </div>
-            <button class="order-btn advance" onclick="restoreOrder('${o.id}')" style="padding:6px 12px;">↩ Restore</button>
-            <button class="order-btn danger" onclick="permanentDelete('${o.id}')" style="padding:6px 12px;">✕</button>
+            <button class="order-btn advance" onclick="restoreOrder('${o._fbId||o.id}')" style="padding:6px 12px;">↩ Restore</button>
+            <button class="order-btn danger" onclick="permanentDelete('${o._fbId||o.id}')" style="padding:6px 12px;">✕</button>
         </div>`;
     }).join('') + showMoreBtn;
     document.getElementById('archivedCount').textContent = total;
@@ -1221,18 +1232,18 @@ function showDetail(id) {
         }</div></div>
         <div class="detail-grid">
             <div class="detail-section"><div class="detail-label">Price</div><div class="detail-value">${o.price || (o.estimatedTotal ? '$' + Number(o.estimatedTotal).toFixed(2) : 'TBD')}${o.tax ? ` <span style="font-size:11px;color:#888;">(incl. $${Number(o.tax).toFixed(2)} tax)</span>` : ''}${o.deliveryFee ? ` <span style="font-size:11px;color:#e67e22;">(+ $${Number(o.deliveryFee).toFixed(2)} delivery)</span>` : ''}${o.paymentStatus ? ` <span style="font-size:11px;color:${o.paymentStatus === 'charged' ? 'var(--green)' : '#e67e22'};">${o.paymentStatus === 'charged' ? '✅ Charged' : '💳 Card on file'}</span>` : ''}</div></div>
-            <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value"><input type="date" value="${o.due || ''}" onchange="updateDue('${o.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;"></div></div>
+            <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value"><input type="date" value="${o.due || ''}" onchange="updateDue('${o._fbId||o.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;"></div></div>
         </div>
         ${(function(){
             const items = o.items || o.itemDetails || [];
             const needsWeigh = Array.isArray(items) && items.some(it => (it.name || '').toLowerCase().includes('wash') || (it.name || '').toLowerCase().includes('fold'));
             const needsQuote = Array.isArray(items) && items.some(it => it.price === 0);
             if (needsWeigh && !o.actualWeight) {
-                return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">⚖️ Needs Weighing</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><input type="number" id="weightInput_'+o.id+'" placeholder="lbs" step="0.5" min="0" style="width:80px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"><span style="font-size:13px;color:#888;">× $2.50/lb</span><span id="weightTotal_'+o.id+'" style="font-weight:700;color:var(--green-dark);"></span></div><button class="order-btn advance" onclick="recordWeight(\''+o.id+'\')" style="margin-top:8px;width:100%;padding:10px;">⚖️ Record Weight & Calculate</button></div>';
+                return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">⚖️ Needs Weighing</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><input type="number" id="weightInput_'+(o._fbId||o.id)+'" placeholder="lbs" step="0.5" min="0" style="width:80px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"><span style="font-size:13px;color:#888;">× $2.50/lb</span><span id="weightTotal_'+(o._fbId||o.id)+'" style="font-weight:700;color:var(--green-dark);"></span></div><button class="order-btn advance" onclick="recordWeight(\''+(o._fbId||o.id)+'\')" style="margin-top:8px;width:100%;padding:10px;">⚖️ Record Weight & Calculate</button></div>';
             } else if (needsWeigh && o.actualWeight) {
                 return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:var(--green-dark);">⚖️ Weighed</div><div style="font-size:15px;font-weight:600;margin-top:4px;">'+o.actualWeight+' lbs × $2.50 = $'+(o.actualWeight * 2.50).toFixed(2)+'</div></div>';
             } else if (needsQuote && !o.quotedPrice) {
-                return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">💰 Needs Quote</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><span>$</span><input type="number" id="quoteInput_'+o.id+'" placeholder="0.00" step="0.01" min="0" style="width:100px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"></div><button class="order-btn advance" onclick="recordQuote(\''+o.id+'\')" style="margin-top:8px;width:100%;padding:10px;">💰 Set Price & Notify Customer</button></div>';
+                return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">💰 Needs Quote</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><span>$</span><input type="number" id="quoteInput_'+(o._fbId||o.id)+'" placeholder="0.00" step="0.01" min="0" style="width:100px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"></div><button class="order-btn advance" onclick="recordQuote(\''+(o._fbId||o.id)+'\')" style="margin-top:8px;width:100%;padding:10px;">💰 Set Price & Notify Customer</button></div>';
             }
             return '';
         })()}
@@ -1240,25 +1251,25 @@ function showDetail(id) {
             if (o.paymentStatus === 'charged') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Charged $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
             if (o.paymentStatus === 'paid-in-store') return '<div class="detail-section" style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center;"><span style="font-size:14px;font-weight:600;color:var(--green-dark);">✅ Paid in store — $'+Number(o.chargedAmount||0).toFixed(2)+' on '+new Date(o.chargedAt).toLocaleDateString()+'</span></div>';
             let amt = getOrderAmount(o);
-            return '<div class="detail-section" style="display:flex;gap:8px;"><button class="order-btn advance" onclick="chargeCard(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;">💳 Charge Card — $'+amt.toFixed(2)+'</button><button onclick="markPaidInStore(\''+o.id+'\')" style="flex:1;padding:12px;font-size:14px;background:#1565c0;color:white;border:none;border-radius:8px;cursor:pointer;">🏪 Paid at Register</button></div>';
+            return '<div class="detail-section" style="display:flex;gap:8px;"><button class="order-btn advance" onclick="chargeCard(\''+(o._fbId||o.id)+'\')" style="flex:1;padding:12px;font-size:14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;">💳 Charge Card — $'+amt.toFixed(2)+'</button><button onclick="markPaidInStore(\''+(o._fbId||o.id)+'\')" style="flex:1;padding:12px;font-size:14px;background:#1565c0;color:white;border:none;border-radius:8px;cursor:pointer;">🏪 Paid at Register</button></div>';
         })()}
         ${o.notes ? `<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${o.notes}</div></div>` : ''}
         <div class="detail-section" style="margin-top:16px;">
             <div class="detail-label">Status</div>
-            <select class="status-select" onchange="changeStatus('${o.id}', this.value)">
+            <select class="status-select" onchange="changeStatus('${o._fbId||o.id}', this.value)">
                 ${STATUSES.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
             </select>
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;">
-            <button class="order-btn" onclick="quickText('${o.id}')" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>
-            <button class="order-btn danger" onclick="if(deleteOrder('${o.id}')!==false)closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
+            <button class="order-btn" onclick="quickText('${o._fbId||o.id}')" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>
+            <button class="order-btn danger" onclick="if(deleteOrder('${o._fbId||o.id}')!==false)closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
         </div>
     `;
     document.getElementById('detailModal').classList.add('active');
 }
 
 function changeStatus(id, newStatus) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     order.status = newStatus;
     fbSaveOrder(order);
@@ -1268,7 +1279,7 @@ function changeStatus(id, newStatus) {
 }
 
 function recordWeight(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     const input = document.getElementById('weightInput_' + id);
     const weight = parseFloat(input ? input.value : 0);
@@ -1305,7 +1316,7 @@ function recordWeight(id) {
 }
 
 function recordQuote(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     const input = document.getElementById('quoteInput_' + id);
     const price = parseFloat(input ? input.value : 0);
@@ -1327,7 +1338,7 @@ function recordQuote(id) {
 }
 
 function updateDue(id, dateVal) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     order.due = dateVal;
     fbSaveOrder(order);
@@ -1351,7 +1362,7 @@ function getOrderAmount(order) {
 }
 
 function chargeCard(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     let amount = getOrderAmount(order);
     if (!amount) { alert('No amount to charge. Record weight or set price first.'); return; }
@@ -1373,7 +1384,7 @@ function chargeCard(id) {
 }
 
 function markPaidInStore(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     let amount = getOrderAmount(order);
     if (!amount) { alert('No amount set. Record weight or set price first.'); return; }
@@ -1389,7 +1400,7 @@ function markPaidInStore(id) {
 }
 
 function quickText(id) {
-    const order = orders.find(o => String(o.id) === String(id));
+    const order = findOrder(id);
     if (!order) return;
     closeModal('detailModal');
     showTextModal(order.id);
@@ -1408,7 +1419,7 @@ function showTextModal(preselect) {
 function applyTemplate() {
     const tmpl = document.getElementById('txt_template').value;
     const orderId = parseInt(document.getElementById('txt_to').value);
-    const order = orders.find(o => String(o.id) === String(orderId));
+    const order = findOrder(orderId);
     if (tmpl && order && SMS_TEMPLATES[tmpl]) {
         document.getElementById('txt_message').value = SMS_TEMPLATES[tmpl](order);
     }
@@ -1417,7 +1428,7 @@ function applyTemplate() {
 function sendText() {
     const orderId = parseInt(document.getElementById('txt_to').value);
     const message = document.getElementById('txt_message').value.trim();
-    const order = orders.find(o => String(o.id) === String(orderId));
+    const order = findOrder(orderId);
     if (!order || !message) return;
 
     smsLog.push({ to: order.name, message: message, time: new Date().toISOString(), auto: false });
