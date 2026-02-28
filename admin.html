@@ -675,6 +675,9 @@ async function initFirebase() {
             // Only keep local orders that were never saved to Firebase (no _fbId and id not matching any FB doc)
             const fbIdValues = new Set(fbOrders.map(o => String(o.id)));
             orders = [...fbOrders, ...orders.filter(o => !o._fbId && !fbIds.has(o.id) && !fbIdValues.has(String(o.id)))];
+            // Deduplicate by _fbId
+            const seen = new Set();
+            orders = orders.filter(o => { if (o._fbId) { if (seen.has(o._fbId)) return false; seen.add(o._fbId); } return true; });
             nextId = Math.max(0, ...orders.filter(o=>typeof o.id==='number').map(o => o.id)) + 1;
             save();
             render();
@@ -1112,30 +1115,29 @@ function advanceOrder(id) {
     }
 }
 
+let _deleteInProgress = false;
 async function deleteOrder(id) {
+    if (_deleteInProgress) return false;
     const order = findOrder(id);
     if (!order) { alert('Order not found (id: ' + id + ')'); return false; }
     if (!confirm('Delete order for ' + order.name + '?')) return false;
+    _deleteInProgress = true;
+    const targetFbId = order._fbId;
     order.archived = true;
     order.archivedAt = new Date().toISOString();
-    markLocalDeleted(order);
-    // Remove from orders array — use _fbId for precision if available, fall back to id
-    const targetFbId = order._fbId;
-    const targetId = order.id;
-    orders = orders.filter(o => {
-        if (targetFbId && o._fbId) return o._fbId !== targetFbId;
-        return String(o.id) !== String(targetId);
-    });
+    if (targetFbId) markLocalDeleted(order);
+    orders = orders.filter(o => o._fbId !== targetFbId);
     save();
     render();
     showToast('🗑️ Order deleted');
-    // Background: sync to Firebase
-    if (order._fbId && db && window._fb) {
+    // Sync to Firebase
+    if (targetFbId && db && window._fb) {
         try {
-            const ref = window._fb.doc(db, 'orders', order._fbId);
+            const ref = window._fb.doc(db, 'orders', targetFbId);
             await window._fb.updateDoc(ref, { archived: true, archivedAt: order.archivedAt });
         } catch(e) { console.warn('Firebase archive failed:', e); }
     }
+    _deleteInProgress = false;
 }
 
 function restoreOrder(id) {
