@@ -645,6 +645,10 @@ async function initFirebase() {
                     smsLog.push({ to: d.name, message: d.confirmSms, time: d.created, auto: true, orderId: doc.id, status: 'pending_twilio' });
                     showToast(`🆕 New order from ${d.name}!`);
                 }
+                // Skip locally deleted orders
+                if (d.archived || _deletedIds.has(String(d.id)) || _deletedIds.has(String(d._fbId))) {
+                    d.archived = true; // ensure flag
+                }
                 fbOrders.push(d);
             });
             // Merge: FB orders + local-only demo orders
@@ -1103,23 +1107,18 @@ async function deleteOrder(id) {
     order.archived = true;
     order.archivedAt = new Date().toISOString();
     markLocalDeleted(order);
+    // Remove from orders array entirely
+    orders = orders.filter(o => String(o.id) !== String(id));
     save();
     render();
-    // Save to Firebase — if full save fails, try setting just the archived field directly
-    try {
-        await fbSaveOrder(order);
-    } catch(e) {
-        console.warn('Full save failed, trying direct archive:', e);
-    }
+    showToast('🗑️ Order deleted');
+    // Background: sync to Firebase
     if (order._fbId && db && window._fb) {
         try {
             const ref = window._fb.doc(db, 'orders', order._fbId);
             await window._fb.updateDoc(ref, { archived: true, archivedAt: order.archivedAt });
-        } catch(e2) { console.warn('Direct archive also failed:', e2); }
+        } catch(e) { console.warn('Firebase archive failed:', e); }
     }
-    render();
-    renderArchived();
-    showToast(`🗑️ Order deleted — can be restored`);
 }
 
 function restoreOrder(id) {
