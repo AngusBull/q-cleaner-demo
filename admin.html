@@ -1653,7 +1653,9 @@ function renderReports() {
 
     // Charged vs pending
     const charged = periodOrders.filter(o => o.paymentStatus === 'charged' || o.paymentStatus === 'paid-in-store');
-    const chargedTotal = charged.reduce((s, o) => s + Number(o.chargedAmount || 0), 0);
+    const chargedTotalWithTax = charged.reduce((s, o) => s + Number(o.chargedAmount || 0), 0);
+    const chargedTax = charged.reduce((s, o) => s + Number(o.tax || 0), 0);
+    const chargedTotal = chargedTotalWithTax - chargedTax;
     const pendingPayment = periodOrders.filter(o => o.paymentStatus !== 'charged' && o.paymentStatus !== 'paid-in-store' && o.status !== 'complete');
 
     // Top items
@@ -1718,9 +1720,14 @@ function renderReports() {
                 <div class="report-sub">${completed} of ${totalOrders} orders</div>
             </div>
             <div class="report-card">
-                <h4>Payments Collected</h4>
+                <h4>Revenue Collected</h4>
                 <div class="report-big">$${chargedTotal.toFixed(2)}</div>
                 <div class="report-sub">${charged.length} charged · ${pendingPayment.length} pending</div>
+            </div>
+            <div class="report-card">
+                <h4>🏛️ Tax Collected</h4>
+                <div class="report-big">$${chargedTax.toFixed(2)}</div>
+                <div class="report-sub">6.25% MA sales tax</div>
             </div>
             <div class="report-card" style="${arUnpaidTotal > 0 ? 'border-left:4px solid #e74c3c;' : ''}">
                 <h4>💰 Accounts Receivable</h4>
