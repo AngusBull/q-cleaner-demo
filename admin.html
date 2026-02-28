@@ -1336,16 +1336,14 @@ function recordWeight(id) {
     order.actualWeight = weight;
     const washTotal = weight * 2.50;
     // Recalculate total: non-wash items at original price + wash items at actual weight
-    const items = order.items || order.itemDetails || [];
+    const items = (Array.isArray(order.itemDetails) && order.itemDetails.length) ? order.itemDetails : (Array.isArray(order.items) ? order.items : []);
     let otherTotal = 0;
-    if (Array.isArray(items)) {
-        items.forEach(it => {
-            const name = (it.name || '').toLowerCase();
-            if (!name.includes('wash') && !name.includes('fold')) {
-                otherTotal += (it.price || 0) * (it.qty || 1);
-            }
-        });
-    }
+    items.forEach(it => {
+        const name = (it.name || '').toLowerCase();
+        if (!name.includes('wash') && !name.includes('fold')) {
+            otherTotal += (it.price || 0) * (it.qty || 1);
+        }
+    });
     const isPickup = order.type === 'pickup';
     const surcharge = isPickup ? items.reduce((s, it) => s + (it.qty || 1), 0) : 0;
     const preTax = otherTotal + washTotal + surcharge + (order.deliveryFee || 0);
