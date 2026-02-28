@@ -1494,9 +1494,10 @@ function renderCustomerList(filter) {
     let customers = window._customers || [];
     if (filter) {
         const f = filter.toLowerCase();
+        const digits = f.replace(/[^0-9]/g, '');
         customers = customers.filter(c =>
             (c.name || '').toLowerCase().includes(f) ||
-            (c.phone || '').includes(f.replace(/[^0-9]/g, '')) ||
+            (digits.length > 0 && (c.phone || '').includes(digits)) ||
             (c.email || '').toLowerCase().includes(f) ||
             (c.address || '').toLowerCase().includes(f)
         );
