@@ -1242,12 +1242,14 @@
 
     // ===== ITEM PICKER =====
     let custItems = [];
+    const STARCH_ITEMS = ['dress shirt', 'shirt', 'blouse', 'pants', 'slacks', 'laundered'];
+    function needsStarch(name) { return STARCH_ITEMS.some(s => name.toLowerCase().includes(s)); }
     function addCustomerItem() {
         const sel = document.getElementById('custGarmentSelect');
         if (!sel.value) return;
         const [name, service, price] = sel.value.split('|');
         const isWeighed = name.toLowerCase().includes('wash') || name.toLowerCase().includes('fold');
-        custItems.push({ name, service, price: parseFloat(price), qty: 1, note: '', weighed: isWeighed });
+        custItems.push({ name, service, price: parseFloat(price), qty: 1, note: '', weighed: isWeighed, starch: needsStarch(name) ? 'none' : '' });
         sel.value = '';
         renderCustomerItems();
     }
@@ -1259,6 +1261,7 @@
         custItems.splice(i, 1);
         renderCustomerItems();
     }
+    function updateCustStarch(i, val) { custItems[i].starch = val; }
     function updateCustNote(i, val) {
         custItems[i].note = val;
     }
@@ -1279,6 +1282,14 @@
                     </div>`}
                     <button type="button" class="item-remove" onclick="removeCustItem(${i})">✕</button>
                 </div>
+                ${item.starch !== undefined && item.starch !== '' ? `<div style="display:flex;align-items:center;gap:6px;margin:4px 0;">
+                    <span style="font-size:12px;color:#666;">Starch:</span>
+                    <select onchange="updateCustStarch(${i},this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;">
+                        <option value="none" ${item.starch==='none'?'selected':''}>No Starch</option>
+                        <option value="light" ${item.starch==='light'?'selected':''}>Light</option>
+                        <option value="regular" ${item.starch==='regular'?'selected':''}>Regular</option>
+                    </select>
+                </div>` : ''}
                 <input class="item-note-input" placeholder="Note (optional): stain, color, special instructions..." value="${item.note}" oninput="updateCustNote(${i},this.value)">
             </div>
         `).join('');

@@ -567,11 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ========== DATA LAYER ==========
 // ===== ADMIN ITEM PICKER =====
 let adminItems = [];
+const STARCH_ITEMS = ['dress shirt', 'shirt', 'blouse', 'pants', 'slacks', 'laundered'];
+function needsStarch(name) { return STARCH_ITEMS.some(s => name.toLowerCase().includes(s)); }
+function updateAdminStarch(i, val) { adminItems[i].starch = val; }
 function addAdminItem() {
     const sel = document.getElementById('adminGarmentSelect');
     if (!sel.value) return;
     const [name, service, price] = sel.value.split('|');
-    adminItems.push({ name, service, price: parseFloat(price), qty: 1, note: '' });
+    adminItems.push({ name, service, price: parseFloat(price), qty: 1, note: '', starch: needsStarch(name) ? 'none' : '' });
     sel.value = '';
     renderAdminItems();
 }
@@ -601,6 +604,14 @@ function renderAdminItems() {
                 </div>
                 <button type="button" class="item-remove" onclick="removeAdminItem(${i})">✕</button>
             </div>
+            ${item.starch !== undefined && item.starch !== '' ? `<div style="display:flex;align-items:center;gap:6px;margin:4px 0;">
+                <span style="font-size:12px;color:#666;">Starch:</span>
+                <select onchange="updateAdminStarch(${i},this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;">
+                    <option value="none" ${item.starch==='none'?'selected':''}>No Starch</option>
+                    <option value="light" ${item.starch==='light'?'selected':''}>Light</option>
+                    <option value="regular" ${item.starch==='regular'?'selected':''}>Regular</option>
+                </select>
+            </div>` : ''}
             <input class="item-note-input" placeholder="Note: stain, color, details..." value="${item.note}" oninput="updateAdminNote(${i},this.value)">
         </div>
     `).join('');
@@ -1273,7 +1284,7 @@ function showDetail(id) {
                 const itms = o.itemDetails || o.items || [];
                 if (Array.isArray(itms) && itms.length && itms[0].name) {
                     return '<table style="width:100%;font-size:13px;border-collapse:collapse;">' +
-                        itms.map(it => '<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:4px 0;">' + (it.name||'') + '</td><td style="padding:4px 8px;text-align:center;color:#888;">' + (it.weighed ? '⚖️' : '×'+(it.qty||1)) + '</td><td style="padding:4px 0;text-align:right;font-weight:600;">' + (it.weighed ? 'TBD' : '$'+(it.price * (it.qty||1)).toFixed(2)) + '</td></tr>' + (it.note ? '<tr><td colspan="3" style="padding:0 0 4px;font-size:11px;color:#999;">↳ ' + it.note + '</td></tr>' : '')).join('') +
+                        itms.map(it => '<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:4px 0;">' + (it.name||'') + (it.starch && it.starch !== 'none' ? ' <span style="font-size:10px;background:#e8f0fe;color:#1a73e8;padding:1px 6px;border-radius:4px;">'+it.starch+' starch</span>' : '') + '</td><td style="padding:4px 8px;text-align:center;color:#888;">' + (it.weighed ? '⚖️' : '×'+(it.qty||1)) + '</td><td style="padding:4px 0;text-align:right;font-weight:600;">' + (it.weighed ? 'TBD' : '$'+(it.price * (it.qty||1)).toFixed(2)) + '</td></tr>' + (it.note ? '<tr><td colspan="3" style="padding:0 0 4px;font-size:11px;color:#999;">↳ ' + it.note + '</td></tr>' : '')).join('') +
                         '</table>';
                 }
                 return o.itemsSummary || (typeof itms === 'string' ? itms : '—');
