@@ -1143,16 +1143,21 @@ async function deleteOrder(id) {
     _deleteInProgress = false;
 }
 
-function restoreOrder(id) {
+async function restoreOrder(id) {
     const order = findOrder(id);
     if (!order) return;
-    delete order.archived;
+    order.archived = false;
     delete order.archivedAt;
     // Remove from deleted set
     if (order._fbId) _deletedIds.delete(String(order._fbId));
     localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
-    fbSaveOrder(order);
-    save();
+    // Explicitly set archived=false in Firebase
+    if (order._fbId && db && window._fb) {
+        try {
+            const ref = window._fb.doc(db, 'orders', order._fbId);
+            await window._fb.updateDoc(ref, { archived: false, archivedAt: null });
+        } catch(e) { console.warn('Restore failed:', e); }
+    }
     render();
     renderArchived();
     showToast(`✅ Order restored for ${order.name}`);
