@@ -875,7 +875,7 @@ function renderKanban() {
                     <button class="order-btn advance" onclick="advanceOrder('${o._fbId||o.id}')">→ ${(function(){ let n = STATUSES.indexOf(status) + 1; if (o.type !== 'pickup' && STATUSES[n] === 'pickedup') n++; return STATUS_LABELS[STATUSES[n]] || 'Done'; })()}</button>
                     <button class="order-btn" onclick="showDetail('${o._fbId||o.id}')">Details</button>
                     ${o.sms && status !== 'complete' ? `<button class="order-btn" onclick="quickText('${o._fbId||o.id}')">📱</button>` : ''}
-                    ${status !== 'complete' ? `<button class="order-btn danger" onclick="deleteOrder('${o._fbId||o.id}')">✕</button>` : ''}
+                    ${''}
                 </div>
             </div>
         `).join('');
