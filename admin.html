@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="form-group">
                     <label>Priority</label>
-                    <select id="o_priority">
+                    <select id="o_priority" onchange="document.getElementById('o_due').value = calcDefaultDue(this.value, document.getElementById('o_pickup_day').value)">
                         <option value="normal">Normal</option>
                         <option value="rush">⚡ Rush</option>
                     </select>
@@ -1844,8 +1844,18 @@ function switchView(view) {
     }
 }
 
+function calcDefaultDue(priority, pickupDay) {
+    const base = pickupDay ? new Date(pickupDay + 'T12:00:00') : new Date();
+    let bizDays = priority === 'rush' ? 1 : 2;
+    while (bizDays > 0) {
+        base.setDate(base.getDate() + 1);
+        if (base.getDay() !== 0) bizDays--;
+    }
+    return base.toISOString().split('T')[0];
+}
 function showNewOrder() { 
     document.getElementById('newOrderModal').classList.add('active');
+    document.getElementById('o_due').value = calcDefaultDue('normal');
     document.getElementById('o_name').focus();
 }
 
