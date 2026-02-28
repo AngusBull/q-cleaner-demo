@@ -1116,22 +1116,28 @@
         if (data.type === 'pickup') {
             const inputs = document.getElementById('pickupFields').querySelectorAll('input, select');
             data.address = inputs[0] ? inputs[0].value : '';
-            data.pickupDay = inputs[1] ? inputs[1].value : '';
+            const rawDay = inputs[1] ? inputs[1].value : '';
             data.pickupTime = '9 AM – 11 AM';
-            // sms already set from checkbox above
-            // Calculate due date: 48hrs from pickup day
-            if (data.pickupDay) {
+            // Calculate actual pickup date from day name
+            if (rawDay) {
                 const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
                 const today = new Date();
-                const targetDay = days.indexOf(data.pickupDay.toLowerCase());
+                const targetDay = days.indexOf(rawDay.toLowerCase());
                 if (targetDay >= 0) {
                     let diff = targetDay - today.getDay();
                     if (diff <= 0) diff += 7;
                     const pickupDate = new Date(today);
                     pickupDate.setDate(today.getDate() + diff);
-                    pickupDate.setDate(pickupDate.getDate() + 2); // +48hrs
-                    data.due = pickupDate.toISOString().split('T')[0];
+                    data.pickupDay = rawDay + ' ' + (pickupDate.getMonth()+1) + '/' + pickupDate.getDate();
+                    data.pickupDate = pickupDate.getFullYear() + '-' + String(pickupDate.getMonth()+1).padStart(2,'0') + '-' + String(pickupDate.getDate()).padStart(2,'0');
+                    const dueDate = new Date(pickupDate);
+                    dueDate.setDate(dueDate.getDate() + 2);
+                    data.due = dueDate.getFullYear() + '-' + String(dueDate.getMonth()+1).padStart(2,'0') + '-' + String(dueDate.getDate()).padStart(2,'0');
+                } else {
+                    data.pickupDay = rawDay;
                 }
+            } else {
+                data.pickupDay = '';
             }
         }
         if (!data.due) {
