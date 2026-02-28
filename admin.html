@@ -696,7 +696,8 @@ async function initFirebase() {
                 window._customers.push(c);
             });
             window._customers.sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0));
-            renderCustomerList();
+            const currentSearch = document.getElementById('custSearch');
+            renderCustomerList(currentSearch ? currentSearch.value : '');
         });
     } catch(e) { console.warn('Firebase init failed, using localStorage only:', e); }
 }
