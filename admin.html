@@ -1098,7 +1098,18 @@ async function deleteOrder(id) {
     save();
     render();
     renderArchived();
-    await fbSaveOrder(order);
+    // Save to Firebase — if full save fails, try setting just the archived field directly
+    try {
+        await fbSaveOrder(order);
+    } catch(e) {
+        console.warn('Full save failed, trying direct archive:', e);
+    }
+    if (order._fbId && db && window._fb) {
+        try {
+            const ref = window._fb.doc(db, 'orders', order._fbId);
+            await window._fb.updateDoc(ref, { archived: true, archivedAt: order.archivedAt });
+        } catch(e2) { console.warn('Direct archive also failed:', e2); }
+    }
     render();
     renderArchived();
     showToast(`🗑️ Order deleted — can be restored`);
