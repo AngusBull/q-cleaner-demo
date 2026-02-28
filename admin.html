@@ -998,10 +998,15 @@ function createOrder(e) {
     order.estimatedTotal = Math.round((priceNum + deliveryFee + order.tax) * 100) / 100;
     order.finalTotal = order.estimatedTotal;
     order.price = '$' + order.finalTotal.toFixed(2);
-    // Auto-calculate due date: 48hrs from pickup day, or 48hrs from now for walk-ins
+    // Auto-calculate due date: 2 business days from pickup day (or from now for walk-ins)
     if (!order.due) {
         const baseDate = order.pickupDay ? new Date(order.pickupDay + 'T12:00:00') : new Date();
-        baseDate.setDate(baseDate.getDate() + 2);
+        let bizDays = 2;
+        while (bizDays > 0) {
+            baseDate.setDate(baseDate.getDate() + 1);
+            const dow = baseDate.getDay();
+            if (dow !== 0) bizDays--; // skip Sunday (Kim closed), Mon-Sat count
+        }
         order.due = baseDate.toISOString().split('T')[0];
     }
     orders.push(order);
