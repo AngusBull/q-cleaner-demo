@@ -928,8 +928,9 @@ function renderSmsLog() {
 }
 
 function renderRoute() {
-    const pickupNew = orders.filter(o => o.type === 'pickup' && o.status === 'new' && o.address);
-    const deliverReady = orders.filter(o => o.type === 'pickup' && o.status === 'ready' && o.address);
+    const active = activeOrders();
+    const pickupNew = active.filter(o => o.type === 'pickup' && o.status === 'new' && o.address);
+    const deliverReady = active.filter(o => o.type === 'pickup' && o.status === 'ready' && o.address);
     const stops = [
         ...pickupNew.map(o => ({ ...o, action: 'pickup' })),
         ...deliverReady.map(o => ({ ...o, action: 'deliver' })),
