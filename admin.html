@@ -1083,8 +1083,8 @@ function advanceOrder(id) {
 
 function deleteOrder(id) {
     const order = orders.find(o => String(o.id) === String(id));
-    if (!order) return;
-    if (!confirm(`Delete order for ${order.name}? It can be restored from the Deleted section.`)) return;
+    if (!order) { alert('Order not found (id: ' + id + ')'); return false; }
+    if (!confirm('Delete order for ' + order.name + '? It can be restored from the Deleted section.')) return false;
     order.archived = true;
     order.archivedAt = new Date().toISOString();
     fbSaveOrder(order);
@@ -1196,7 +1196,7 @@ function showDetail(id) {
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;">
             <button class="order-btn" onclick="quickText('${o.id}')" style="flex:1;padding:10px;font-size:13px;">📱 Send Text</button>
-            <button class="order-btn danger" onclick="deleteOrder('${o.id}');closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
+            <button class="order-btn danger" onclick="if(deleteOrder('${o.id}')!==false)closeModal('detailModal')" style="flex:1;padding:10px;font-size:13px;">🗑️ Delete</button>
         </div>
     `;
     document.getElementById('detailModal').classList.add('active');
