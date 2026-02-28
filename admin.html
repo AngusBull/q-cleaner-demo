@@ -648,6 +648,14 @@ async function initFirebase() {
                 fbOrders.push(d);
             });
             // Merge: FB orders + local-only demo orders
+            // Preserve local state (archived flag) that may not have synced yet
+            const localMap = {};
+            orders.forEach(o => { if (o._fbId) localMap[o._fbId] = o; else if (o.id) localMap[o.id] = o; });
+            fbOrders.forEach(o => {
+                const local = localMap[o._fbId];
+                if (local && local.archived && !o.archived) o.archived = true;
+                if (local && local.archivedAt && !o.archivedAt) o.archivedAt = local.archivedAt;
+            });
             const fbIds = new Set(fbOrders.map(o => o._fbId));
             orders = [...fbOrders, ...orders.filter(o => !o._fbId && !fbIds.has(o.id))];
             nextId = Math.max(0, ...orders.filter(o=>typeof o.id==='number').map(o => o.id)) + 1;
@@ -1081,17 +1089,19 @@ function advanceOrder(id) {
     }
 }
 
-function deleteOrder(id) {
+async function deleteOrder(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) { alert('Order not found (id: ' + id + ')'); return false; }
     if (!confirm('Delete order for ' + order.name + '? It can be restored from the Deleted section.')) return false;
     order.archived = true;
     order.archivedAt = new Date().toISOString();
-    fbSaveOrder(order);
     save();
     render();
     renderArchived();
-    showToast(`🗑️ Order archived — can be restored`);
+    await fbSaveOrder(order);
+    render();
+    renderArchived();
+    showToast(`🗑️ Order deleted — can be restored`);
 }
 
 function restoreOrder(id) {
