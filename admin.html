@@ -1134,6 +1134,10 @@ function restoreOrder(id) {
     if (!order) return;
     delete order.archived;
     delete order.archivedAt;
+    // Remove from deleted set
+    _deletedIds.delete(String(order.id));
+    if (order._fbId) _deletedIds.delete(String(order._fbId));
+    localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
     fbSaveOrder(order);
     save();
     render();
