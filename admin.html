@@ -703,6 +703,23 @@ async function initFirebase() {
 initFirebase();
 
 const MA_TAX_RATE = 0.0625;
+
+// ========== BUSINESS CONFIG (change per client) ==========
+const BIZ_CONFIG = {
+    closedDays: [0],          // 0=Sun, 6=Sat — days the shop is closed
+    cutoffHour: 12,           // Orders after this hour (noon) → count starts next biz day
+    dueDays: {
+        normal: 2,            // Business days for normal orders
+        rush: 1,              // Business days for rush orders
+    },
+    hours: {                  // For display only
+        weekday: '9 AM – 5:30 PM',
+        saturday: '9 AM – 3 PM',
+        sunday: 'Closed',
+    },
+};
+// ========== END BUSINESS CONFIG ==========
+
 const STATUSES = ['new', 'pickedup', 'cleaning', 'ready', 'complete'];
 const STATUS_LABELS = { new: 'New', pickedup: 'Picked Up', cleaning: 'Cleaning', ready: 'Ready', complete: 'Complete' };
 const STATUS_DOTS = { new: 'dot-new', pickedup: 'dot-pickedup', cleaning: 'dot-cleaning', ready: 'dot-ready', complete: 'dot-complete' };
@@ -1838,11 +1855,24 @@ function switchView(view) {
 }
 
 function calcDefaultDue(priority, pickupDay) {
-    const base = pickupDay ? new Date(pickupDay + 'T12:00:00') : new Date();
-    let bizDays = priority === 'rush' ? 1 : 2;
+    const cfg = BIZ_CONFIG;
+    const now = new Date();
+    let base;
+    if (pickupDay) {
+        base = new Date(pickupDay + 'T12:00:00');
+    } else {
+        base = new Date(now);
+        // If past cutoff hour, start counting from next business day
+        if (now.getHours() >= cfg.cutoffHour) {
+            do {
+                base.setDate(base.getDate() + 1);
+            } while (cfg.closedDays.includes(base.getDay()));
+        }
+    }
+    let bizDays = cfg.dueDays[priority] || cfg.dueDays.normal;
     while (bizDays > 0) {
         base.setDate(base.getDate() + 1);
-        if (base.getDay() !== 0) bizDays--;
+        if (!cfg.closedDays.includes(base.getDay())) bizDays--;
     }
     // Use local date, not UTC
     const y = base.getFullYear();
