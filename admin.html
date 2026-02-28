@@ -839,7 +839,14 @@ function renderKanban() {
     const active = activeOrders();
     const cols = STATUSES.map(status => {
         let statusOrders = active.filter(o => o.status === status);
-        // Sort complete by most recent first, limit display
+        // Sort by due date (soonest first), then by created
+        if (status !== 'complete') {
+            statusOrders.sort((a, b) => {
+                const da = a.due || '9999';
+                const db = b.due || '9999';
+                return da.localeCompare(db) || (a.created || '').localeCompare(b.created || '');
+            });
+        }
         const totalComplete = statusOrders.length;
         let showMoreBtn = '';
         if (status === 'complete') {
@@ -875,7 +882,15 @@ function renderKanban() {
                 })()}</div>
                 <div class="order-footer">
                     <span class="order-type ${o.type === 'pickup' ? 'type-pickup' : 'type-walkin'}">${o.type === 'pickup' ? '🚗 Pickup' : 'Walk-in'}</span>
-                    <span class="order-price">${o.price || '—'}</span>
+                    ${(function(){
+                        if (!o.due) return '<span class="order-price">' + (o.price || '—') + '</span>';
+                        const now = new Date(); now.setHours(0,0,0,0);
+                        const due = new Date(o.due + 'T00:00:00');
+                        const diff = Math.round((due - now) / 86400000);
+                        const label = diff < 0 ? 'OVERDUE' : diff === 0 ? 'Due today' : diff === 1 ? 'Due tomorrow' : 'Due ' + due.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+                        const color = diff < 0 ? '#e74c3c' : diff === 0 ? '#e67e22' : '#888';
+                        return '<span style="font-size:11px;font-weight:600;color:'+color+';">📅 '+label+'</span>';
+                    })()}
                 </div>
                 <div class="order-actions">
                     <button class="order-btn advance" onclick="advanceOrder('${o._fbId||o.id}')">→ ${(function(){ let n = STATUSES.indexOf(status) + 1; if (o.type !== 'pickup' && STATUSES[n] === 'pickedup') n++; return STATUS_LABELS[STATUSES[n]] || 'Done'; })()}</button>
@@ -901,7 +916,8 @@ function renderKanban() {
 }
 
 function renderTable() {
-    const rows = activeOrders().map(o => `
+    const sorted = activeOrders().sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || (a.created || '').localeCompare(b.created || ''));
+    const rows = sorted.map(o => `
         <tr>
             <td><span style="color:#aaa;font-size:11px;">#${String(o.ticketNum||0).padStart(4,'0')}</span> <strong>${o.name}</strong>${o.address ? `<br><span style="font-size:11px;color:var(--text-light)">${o.address}</span>` : ''}</td>
             <td>${o.phone}</td>
