@@ -823,6 +823,7 @@ function renderStats() {
         <div class="stat-card"><div class="stat-label">Ready for Delivery</div><div class="stat-value" style="color:var(--orange)">${readyDeliver.length}</div><div class="stat-sub">${readyDeliver.length > 0 ? readyDeliver.length + ' stops' : 'All delivered'}</div></div>
         <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" style="color:var(--green)">$${weekRevenue.toFixed(2)}</div><div class="stat-sub">All orders</div></div>
         <div class="stat-card"><div class="stat-label">Texts Sent</div><div class="stat-value" style="color:var(--purple)">${todaySms.length}</div><div class="stat-sub">Today</div></div>
+        ${(function(){ const unpaid = active.filter(o => o.paymentStatus !== 'charged' && o.paymentStatus !== 'paid-in-store'); const unpaidAmt = unpaid.reduce((s,o) => { const tax = Number(o.tax||0); if(o.finalTotal) return s+Number(o.finalTotal)-tax; if(o.estimatedTotal) return s+Number(o.estimatedTotal)-tax; return s; }, 0); return unpaid.length > 0 ? '<div class="stat-card"><div class="stat-label">Unpaid</div><div class="stat-value" style="color:#e74c3c">'+unpaid.length+'</div><div class="stat-sub">$'+unpaidAmt.toFixed(2)+' outstanding</div></div>' : ''; })()}
     `;
 }
 
@@ -1642,6 +1643,15 @@ function renderReports() {
     const topItems = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 8);
     const maxItemCount = topItems.length > 0 ? topItems[0][1] : 1;
 
+    // Accounts Receivable — unpaid orders (not charged, not paid-in-store, not archived)
+    const arUnpaidOrders = periodOrders.filter(o => o.paymentStatus !== 'charged' && o.paymentStatus !== 'paid-in-store' && !o.archived);
+    const arUnpaidTotal = arUnpaidOrders.reduce((s, o) => s + getRevenue(o), 0);
+    const arOldest = arUnpaidOrders.length > 0 ? (function() {
+        const oldest = arUnpaidOrders.sort((a, b) => (a.created || '').localeCompare(b.created || ''))[0];
+        const days = Math.floor((Date.now() - new Date(oldest.created).getTime()) / 86400000);
+        return days === 0 ? 'today' : days === 1 ? '1 day ago' : days + ' days ago';
+    })() : '';
+
     const prevLabel = reportPeriod === '7' ? 'prev week' : reportPeriod === '30' ? 'prev month' : reportPeriod === '90' ? 'prev 90 days' : reportPeriod === '365' ? 'prev year' : '';
 
     document.getElementById('reportsView').innerHTML = `
@@ -1685,6 +1695,11 @@ function renderReports() {
                 <h4>Payments Collected</h4>
                 <div class="report-big">$${chargedTotal.toFixed(2)}</div>
                 <div class="report-sub">${charged.length} charged · ${pendingPayment.length} pending</div>
+            </div>
+            <div class="report-card" style="${arUnpaidTotal > 0 ? 'border-left:4px solid #e74c3c;' : ''}">
+                <h4>💰 Accounts Receivable</h4>
+                <div class="report-big" style="${arUnpaidTotal > 0 ? 'color:#e74c3c;' : ''}">${arUnpaidTotal > 0 ? '$' + arUnpaidTotal.toFixed(2) : '$0'}</div>
+                <div class="report-sub">${arUnpaidOrders.length} unpaid order${arUnpaidOrders.length !== 1 ? 's' : ''}${arOldest ? ' · oldest ' + arOldest : ''}</div>
             </div>
             <div class="report-card">
                 <h4>All-Time Revenue</h4>
