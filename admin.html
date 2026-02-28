@@ -1149,17 +1149,35 @@ function permanentDelete(id) {
     showToast(`🗑️ Permanently deleted`);
 }
 
+let showAllArchived = false;
+const ARCHIVED_LIMIT = 3;
+
+function toggleArchived() {
+    showAllArchived = !showAllArchived;
+    renderArchived();
+}
+
 function renderArchived() {
     const panel = document.getElementById('archivedPanel');
     if (!panel) return;
-    const archived = orders.filter(o => o.archived || _deletedIds.has(String(o.id)) || _deletedIds.has(String(o._fbId)));
-    if (archived.length === 0) {
+    let archived = orders.filter(o => o.archived || _deletedIds.has(String(o.id)) || _deletedIds.has(String(o._fbId)));
+    archived.sort((a, b) => (b.archivedAt || '').localeCompare(a.archivedAt || ''));
+    const total = archived.length;
+    if (total === 0) {
         panel.style.display = 'none';
         return;
     }
     panel.style.display = 'block';
+    let showMoreBtn = '';
+    if (!showAllArchived && total > ARCHIVED_LIMIT) {
+        const hidden = total - ARCHIVED_LIMIT;
+        archived = archived.slice(0, ARCHIVED_LIMIT);
+        showMoreBtn = `<button onclick="toggleArchived()" style="width:100%;padding:10px;border:1px dashed #ccc;border-radius:8px;background:none;color:var(--text-light);font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px;">Show ${hidden} more deleted orders</button>`;
+    } else if (showAllArchived && total > ARCHIVED_LIMIT) {
+        showMoreBtn = `<button onclick="toggleArchived()" style="width:100%;padding:10px;border:1px dashed #ccc;border-radius:8px;background:none;color:var(--text-light);font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px;">Show less</button>`;
+    }
     document.getElementById('archivedList').innerHTML = archived.map(o => {
-        const daysAgo = Math.floor((Date.now() - new Date(o.archivedAt).getTime()) / 86400000);
+        const daysAgo = o.archivedAt ? Math.floor((Date.now() - new Date(o.archivedAt).getTime()) / 86400000) : '?';
         return `<div class="cust-row">
             <div style="flex:1;">
                 <div class="cust-name">${o.name}</div>
@@ -1168,8 +1186,8 @@ function renderArchived() {
             <button class="order-btn advance" onclick="restoreOrder('${o.id}')" style="padding:6px 12px;">↩ Restore</button>
             <button class="order-btn danger" onclick="permanentDelete('${o.id}')" style="padding:6px 12px;">✕</button>
         </div>`;
-    }).join('');
-    document.getElementById('archivedCount').textContent = archived.length;
+    }).join('') + showMoreBtn;
+    document.getElementById('archivedCount').textContent = total;
 }
 
 function showDetail(id) {
