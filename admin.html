@@ -776,7 +776,7 @@ function markLocalDeleted(order) {
     if (order._fbId) _deletedIds.add(String(order._fbId));
     localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
 }
-function findOrder(id) { return orders.find(o => String(o._fbId) === String(id) || String(o.id) === String(id)); }
+function findOrder(id) { return orders.find(o => String(o._fbId) === String(id)) || orders.find(o => String(o.id) === String(id)); }
 function activeOrders() { return orders.filter(o => !o.archived && !_deletedIds.has(String(o.id)) && !_deletedIds.has(String(o._fbId))); }
 
 function render() {
