@@ -773,7 +773,14 @@ async function fbDeleteOrder(order) {
 }
 
 // ========== RENDERING ==========
-function activeOrders() { return orders.filter(o => !o.archived); }
+// Local deleted set — survives Firebase re-sync
+const _deletedIds = new Set(JSON.parse(localStorage.getItem('qc_deleted') || '[]'));
+function markLocalDeleted(order) {
+    _deletedIds.add(String(order.id));
+    if (order._fbId) _deletedIds.add(String(order._fbId));
+    localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
+}
+function activeOrders() { return orders.filter(o => !o.archived && !_deletedIds.has(String(o.id)) && !_deletedIds.has(String(o._fbId))); }
 
 function render() {
     renderStats();
@@ -1092,12 +1099,12 @@ function advanceOrder(id) {
 async function deleteOrder(id) {
     const order = orders.find(o => String(o.id) === String(id));
     if (!order) { alert('Order not found (id: ' + id + ')'); return false; }
-    if (!confirm('Delete order for ' + order.name + '? It can be restored from the Deleted section.')) return false;
+    if (!confirm('Delete order for ' + order.name + '?')) return false;
     order.archived = true;
     order.archivedAt = new Date().toISOString();
+    markLocalDeleted(order);
     save();
     render();
-    renderArchived();
     // Save to Firebase — if full save fails, try setting just the archived field directly
     try {
         await fbSaveOrder(order);
@@ -1141,7 +1148,7 @@ function permanentDelete(id) {
 function renderArchived() {
     const panel = document.getElementById('archivedPanel');
     if (!panel) return;
-    const archived = orders.filter(o => o.archived);
+    const archived = orders.filter(o => o.archived || _deletedIds.has(String(o.id)) || _deletedIds.has(String(o._fbId)));
     if (archived.length === 0) {
         panel.style.display = 'none';
         return;
