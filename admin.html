@@ -280,9 +280,11 @@
     </div>
 </div>
 <script>
-// Clear all local data if ?reset is in URL
+// Clear local data if ?reset is in URL (preserve ticket counter)
 if (window.location.search.includes('reset')) {
+    const savedCounter = localStorage.getItem('qc_ticketCounter');
     localStorage.clear();
+    if (savedCounter) localStorage.setItem('qc_ticketCounter', savedCounter);
     sessionStorage.clear();
     window.location.href = window.location.pathname;
 }
@@ -679,6 +681,9 @@ async function initFirebase() {
             const seen = new Set();
             orders = orders.filter(o => { if (o._fbId) { if (seen.has(o._fbId)) return false; seen.add(o._fbId); } return true; });
             nextId = Math.max(0, ...orders.filter(o=>typeof o.id==='number').map(o => o.id)) + 1;
+            // Sync ticket counter from Firestore (always use max)
+            const maxTicket = Math.max(0, ...orders.map(o => Number(o.ticketNum) || 0));
+            if (maxTicket > ticketCounter) { ticketCounter = maxTicket; localStorage.setItem('qc_ticketCounter', String(ticketCounter)); }
             save();
             render();
         });
