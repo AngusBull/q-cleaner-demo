@@ -792,7 +792,13 @@ function renderStats() {
     const today = active.filter(o => o.status !== 'complete');
     const pickups = active.filter(o => o.type === 'pickup' && o.status === 'new');
     const readyDeliver = active.filter(o => o.type === 'pickup' && o.status === 'ready');
-    const weekRevenue = active.reduce((sum, o) => sum + parseFloat((o.price || '0').replace(/[^0-9.]/g, '') || 0), 0);
+    const weekRevenue = active.reduce((sum, o) => {
+        if (o.chargedAmount) return sum + Number(o.chargedAmount);
+        if (o.finalTotal) return sum + Number(o.finalTotal);
+        if (o.estimatedTotal) return sum + Number(o.estimatedTotal);
+        const p = String(o.price || '0').replace(/[^0-9.]/g, '');
+        return sum + (parseFloat(p) || 0);
+    }, 0);
     const todaySms = smsLog.filter(s => new Date(s.time).toDateString() === new Date().toDateString());
 
     document.getElementById('statsBar').innerHTML = `
