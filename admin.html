@@ -1283,8 +1283,9 @@ function showDetail(id) {
             <div class="detail-section"><div class="detail-label">Due</div><div class="detail-value"><input type="date" value="${o.due || ''}" onchange="updateDue('${o._fbId||o.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;"></div></div>
         </div>
         ${(function(){
-            const items = o.items || o.itemDetails || [];
-            const needsWeigh = Array.isArray(items) && items.some(it => (it.name || '').toLowerCase().includes('wash') || (it.name || '').toLowerCase().includes('fold'));
+            const items = (Array.isArray(o.itemDetails) && o.itemDetails.length) ? o.itemDetails : (Array.isArray(o.items) ? o.items : []);
+            const itemsStr = o.items || o.itemsSummary || '';
+            const needsWeigh = (Array.isArray(items) && items.some(it => (it.name || '').toLowerCase().includes('wash') || (it.name || '').toLowerCase().includes('fold'))) || (typeof itemsStr === 'string' && (itemsStr.toLowerCase().includes('wash') || itemsStr.toLowerCase().includes('fold')));
             const needsQuote = Array.isArray(items) && items.some(it => it.price === 0);
             if (needsWeigh && !o.actualWeight) {
                 return '<div class="detail-section" style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:12px;"><div class="detail-label" style="color:#e67e22;">⚖️ Needs Weighing</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;"><input type="number" id="weightInput_'+(o._fbId||o.id)+'" placeholder="lbs" step="0.5" min="0" style="width:80px;padding:8px;border:2px solid #e67e22;border-radius:8px;font-size:15px;font-weight:600;"><span style="font-size:13px;color:#888;">× $2.50/lb</span><span id="weightTotal_'+(o._fbId||o.id)+'" style="font-weight:700;color:var(--green-dark);"></span></div><button class="order-btn advance" onclick="recordWeight(\''+(o._fbId||o.id)+'\')" style="margin-top:8px;width:100%;padding:10px;">⚖️ Record Weight & Calculate</button></div>';
