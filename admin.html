@@ -261,6 +261,49 @@
 </head>
 <body>
 
+<!-- AUTH GATE -->
+<div id="authGate" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1A4232;z-index:99999;display:flex;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;padding:40px;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="font-size:40px;margin-bottom:8px;">🧵</div>
+        <h2 style="margin:0 0 4px;color:#1A4232;font-family:Inter,sans-serif;">Q Cleaner & Tailor</h2>
+        <p style="margin:0 0 24px;color:#666;font-size:14px;">Admin Dashboard</p>
+        <input type="password" id="authPassword" placeholder="Enter password" autofocus
+            style="width:100%;padding:14px 16px;border:2px solid #ddd;border-radius:10px;font-size:16px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#2D6B4F'" onblur="this.style.borderColor='#ddd'">
+        <div id="authError" style="color:#EF4444;font-size:13px;margin-top:8px;min-height:20px;"></div>
+        <button onclick="tryLogin()" style="width:100%;padding:14px;background:#2D6B4F;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;font-family:Inter,sans-serif;">Sign In</button>
+        <p style="margin:16px 0 0;color:#aaa;font-size:11px;">Authorized personnel only</p>
+    </div>
+</div>
+<script>
+const AUTH_HASH = 'e89ad42e3f55c0730ad770d77f9f006d79d51feb51932c70f1b582e4d44b0cf5';
+async function sha256(text) {
+    const data = new TextEncoder().encode(text);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function tryLogin() {
+    const pw = document.getElementById('authPassword').value;
+    const hash = await sha256(pw);
+    if (hash === AUTH_HASH) {
+        sessionStorage.setItem('qc_auth', 'true');
+        document.getElementById('authGate').style.display = 'none';
+    } else {
+        document.getElementById('authError').textContent = 'Incorrect password';
+        document.getElementById('authPassword').value = '';
+        document.getElementById('authPassword').style.borderColor = '#EF4444';
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem('qc_auth') === 'true') {
+        document.getElementById('authGate').style.display = 'none';
+    }
+    document.getElementById('authPassword').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') tryLogin();
+    });
+});
+</script>
+
 <div class="topbar">
     <div class="topbar-left">
         <span class="topbar-logo">🌿 Q Cleaner & Tailor</span>
