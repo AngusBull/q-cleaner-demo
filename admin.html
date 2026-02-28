@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <h3 style="margin:0;">👥 Customers</h3>
             <div style="display:flex;gap:8px;align-items:center;">
-                <input type="text" id="custSearch" placeholder="Search by name or phone..." oninput="filterCustomers()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;width:200px;">
+                <input type="text" id="custSearch" placeholder="Search by name or phone.." oninput="filterCustomers()" onkeyup="filterCustomers()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;width:200px;">
                 <span id="custCount" style="font-size:12px;color:var(--text-light);"></span>
             </div>
         </div>
