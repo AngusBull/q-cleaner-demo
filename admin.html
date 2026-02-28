@@ -1118,24 +1118,27 @@ function advanceOrder(id) {
 let _deleteInProgress = false;
 async function deleteOrder(id) {
     if (_deleteInProgress) return false;
-    const order = findOrder(id);
-    if (!order) { alert('Order not found (id: ' + id + ')'); return false; }
-    if (!confirm('Delete order for ' + order.name + '?')) return false;
+    const fbId = String(id);
+    const order = findOrder(fbId);
+    if (!order) { alert('Order not found'); return false; }
+    const orderName = order.name;
+    if (!confirm('Delete order for ' + orderName + '?')) return false;
     _deleteInProgress = true;
-    const targetFbId = order._fbId;
-    order.archived = true;
-    order.archivedAt = new Date().toISOString();
-    if (targetFbId) markLocalDeleted(order);
-    orders = orders.filter(o => o._fbId !== targetFbId);
-    save();
-    render();
-    showToast('🗑️ Order deleted');
-    // Sync to Firebase
-    if (targetFbId && db && window._fb) {
-        try {
-            const ref = window._fb.doc(db, 'orders', targetFbId);
-            await window._fb.updateDoc(ref, { archived: true, archivedAt: order.archivedAt });
-        } catch(e) { console.warn('Firebase archive failed:', e); }
+    try {
+        // 1. Mark in Firebase FIRST (source of truth)
+        if (db && window._fb) {
+            const ref = window._fb.doc(db, 'orders', fbId);
+            await window._fb.updateDoc(ref, { archived: true, archivedAt: new Date().toISOString() });
+        }
+        // 2. Add to local deleted set
+        _deletedIds.add(fbId);
+        localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
+        // 3. Re-render (onSnapshot will also fire and handle it)
+        render();
+        showToast('🗑️ Order deleted — ' + orderName);
+    } catch(e) {
+        console.warn('Delete failed:', e);
+        showToast('❌ Delete failed');
     }
     _deleteInProgress = false;
 }
