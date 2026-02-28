@@ -1529,6 +1529,11 @@ function filterCustomers() {
     const search = document.getElementById('custSearch');
     renderCustomerList(search ? search.value : '');
 }
+// Ensure search works on all browsers
+document.addEventListener('DOMContentLoaded', function() {
+    const s = document.getElementById('custSearch');
+    if (s) s.addEventListener('input', filterCustomers);
+});
 
 function formatPhone(phone) {
     if (phone.length === 10) return '(' + phone.slice(0,3) + ') ' + phone.slice(3,6) + '-' + phone.slice(6);
