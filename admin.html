@@ -808,7 +808,7 @@ function renderStats() {
         <div class="stat-card"><div class="stat-label">Active Orders</div><div class="stat-value">${today.length}</div><div class="stat-sub">${active.filter(o=>o.type==='pickup'&&o.status!=='complete').length} pickup, ${active.filter(o=>o.type==='walkin'&&o.status!=='complete').length} walk-in</div></div>
         <div class="stat-card"><div class="stat-label">Pending Pickup</div><div class="stat-value" style="color:var(--blue)">${pickups.length}</div><div class="stat-sub">${pickups.length > 0 ? 'Next: ' + (pickups[0].pickupTime || 'TBD') : 'None scheduled'}</div></div>
         <div class="stat-card"><div class="stat-label">Ready for Delivery</div><div class="stat-value" style="color:var(--orange)">${readyDeliver.length}</div><div class="stat-sub">${readyDeliver.length > 0 ? readyDeliver.length + ' stops' : 'All delivered'}</div></div>
-        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" style="color:var(--green)">$${weekRevenue.toFixed(0)}</div><div class="stat-sub">All orders</div></div>
+        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" style="color:var(--green)">$${weekRevenue.toFixed(2)}</div><div class="stat-sub">All orders</div></div>
         <div class="stat-card"><div class="stat-label">Texts Sent</div><div class="stat-value" style="color:var(--purple)">${todaySms.length}</div><div class="stat-sub">Today</div></div>
     `;
 }
@@ -1642,7 +1642,7 @@ function renderReports() {
         <div class="report-grid">
             <div class="report-card">
                 <h4>Revenue</h4>
-                <div class="report-big">$${periodRevenue.toFixed(0)}</div>
+                <div class="report-big">$${periodRevenue.toFixed(2)}</div>
                 <div class="report-sub">${periodLabel}</div>
                 ${revenueChange != 0 && prevLabel ? `<div class="report-change ${revenueChange > 0 ? 'up' : 'down'}">${revenueChange > 0 ? '↑' : '↓'} ${Math.abs(revenueChange)}% vs ${prevLabel}</div>` : ''}
             </div>
@@ -1664,12 +1664,12 @@ function renderReports() {
             </div>
             <div class="report-card">
                 <h4>Payments Collected</h4>
-                <div class="report-big">$${chargedTotal.toFixed(0)}</div>
+                <div class="report-big">$${chargedTotal.toFixed(2)}</div>
                 <div class="report-sub">${charged.length} charged · ${pendingPayment.length} pending</div>
             </div>
             <div class="report-card">
                 <h4>All-Time Revenue</h4>
-                <div class="report-big">$${allTimeRevenue.toFixed(0)}</div>
+                <div class="report-big">$${allTimeRevenue.toFixed(2)}</div>
                 <div class="report-sub">${_ao.length} total orders</div>
             </div>
         </div>
@@ -1687,7 +1687,7 @@ function renderReports() {
                                     ${serviceCounts[svc]}
                                 </div>
                             </div>
-                            <div class="bar-value">$${(serviceRevenue[svc]||0).toFixed(0)}</div>
+                            <div class="bar-value">$${(serviceRevenue[svc]||0).toFixed(2)}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -1720,12 +1720,12 @@ function renderReports() {
                     <div style="flex:1;text-align:center;padding:16px;background:var(--green-pale);border-radius:10px;">
                         <div style="font-size:24px;font-weight:700;color:var(--green-dark);">${pickupCount}</div>
                         <div style="font-size:12px;color:var(--text-light);">Pickup Orders</div>
-                        <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-top:4px;">$${pickupRevenue.toFixed(0)}</div>
+                        <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-top:4px;">$${pickupRevenue.toFixed(2)}</div>
                     </div>
                     <div style="flex:1;text-align:center;padding:16px;background:#f0f0f0;border-radius:10px;">
                         <div style="font-size:24px;font-weight:700;color:#555;">${walkinCount}</div>
                         <div style="font-size:12px;color:var(--text-light);">Walk-in Orders</div>
-                        <div style="font-size:14px;font-weight:600;color:#555;margin-top:4px;">$${walkinRevenue.toFixed(0)}</div>
+                        <div style="font-size:14px;font-weight:600;color:#555;margin-top:4px;">$${walkinRevenue.toFixed(2)}</div>
                     </div>
                 </div>
                 <div class="metric-row">
