@@ -953,6 +953,9 @@
         <button class="modal-close" onclick="closeModal()">✕</button>
         <div style="text-align:center;margin-bottom:20px;font-size:56px;">💚</div>
         <h2>You're all set!</h2>
+        <div id="orderNumDisplay" style="text-align:center;margin-bottom:12px;display:none;">
+            <span style="background:var(--plum);color:#fff;font-size:22px;font-weight:700;padding:8px 22px;border-radius:8px;letter-spacing:1px;" id="orderNumText"></span>
+        </div>
         <p>Kim will confirm your request shortly — usually within a few hours during business hours.</p>
         <div style="background:var(--plum-pale);border-radius:10px;padding:16px;margin-bottom:16px;">
             <div style="font-weight:600;color:var(--plum-dark);margin-bottom:4px;">What happens next:</div>
@@ -1144,7 +1147,8 @@
         if (db && window._fb) {
             try {
                 const fb = window._fb;
-                await fb.addDoc(fb.collection(db, 'orders'), data);
+                const docRef = await fb.addDoc(fb.collection(db, 'orders'), data);
+                data._docId = docRef.id;
 
                 // Save/update customer record
                 const phone = normalizePhone(data.phone);
@@ -1187,7 +1191,7 @@
         return data;
     }
 
-    function showConfirmation(e) {
+    async function showConfirmation(e) {
         e.preventDefault();
         var form = e.target.closest ? e.target.closest('form') : e.target;
         if (!form || !form.reset) form = document.querySelector('.contact-form form');
@@ -1207,7 +1211,15 @@
             }
         }
 
-        submitOrder(form);
+        const data = await submitOrder(form);
+        // Show order number from Firestore doc ID (last 4 chars, uppercase)
+        const orderNum = data._docId ? data._docId.slice(-5).toUpperCase() : '';
+        if (orderNum) {
+            document.getElementById('orderNumText').textContent = 'Order #' + orderNum;
+            document.getElementById('orderNumDisplay').style.display = 'block';
+        } else {
+            document.getElementById('orderNumDisplay').style.display = 'none';
+        }
         document.getElementById('confirmModal').classList.add('active');
         setTimeout(function() {
             form.reset();
