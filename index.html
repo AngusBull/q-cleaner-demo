@@ -1096,7 +1096,7 @@
             phone: form.querySelector('input[type="tel"]').value,
             email: form.querySelector('input[type="email"]').value || '',
             type: isPickup ? 'pickup' : 'walkin',
-            items: custItems.map(it => ({ name: it.name, service: it.service, price: it.price, qty: it.qty, note: it.note })),
+            items: custItems.map(it => ({ name: it.name, service: it.service, price: it.price, qty: it.qty, note: it.note, starch: it.starch || '', weighed: it.weighed || false })),
             itemsSummary: custItems.map(it => (it.qty > 1 ? it.qty + ' ' : '') + it.name).join(', '),
             subtotal: subtotal,
             deliveryFee: deliveryFee,
@@ -1147,6 +1147,12 @@
         if (db && window._fb) {
             try {
                 const fb = window._fb;
+                // Get next sequential ticket number from Firestore
+                const allOrders = await fb.getDocs(fb.collection(db, 'orders'));
+                let maxTicket = 0;
+                allOrders.forEach(d => { const t = Number(d.data().ticketNum) || 0; if (t > maxTicket) maxTicket = t; });
+                data.ticketNum = maxTicket + 1;
+
                 const docRef = await fb.addDoc(fb.collection(db, 'orders'), data);
                 data._docId = docRef.id;
 
@@ -1212,10 +1218,9 @@
         }
 
         const data = await submitOrder(form);
-        // Show order number from Firestore doc ID (last 4 chars, uppercase)
-        const orderNum = data._docId ? data._docId.slice(-5).toUpperCase() : '';
-        if (orderNum) {
-            document.getElementById('orderNumText').textContent = 'Order #' + orderNum;
+        // Show sequential ticket number
+        if (data.ticketNum) {
+            document.getElementById('orderNumText').textContent = 'Order #' + String(data.ticketNum).padStart(4, '0');
             document.getElementById('orderNumDisplay').style.display = 'block';
         } else {
             document.getElementById('orderNumDisplay').style.display = 'none';

@@ -771,6 +771,11 @@ function getTicketNum(order) {
     ticketCounter++;
     order.ticketNum = ticketCounter;
     localStorage.setItem('qc_ticketCounter', String(ticketCounter));
+    // Write ticket number back to Firestore so it persists
+    if (order._fbId && db && window._fb) {
+        const fb = window._fb;
+        fb.updateDoc(fb.doc(db, 'orders', order._fbId), { ticketNum: order.ticketNum }).catch(() => {});
+    }
     return order.ticketNum;
 }
 // Assign ticket numbers to existing orders
