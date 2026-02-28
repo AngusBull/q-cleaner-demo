@@ -657,7 +657,7 @@ async function initFirebase() {
                     showToast(`🆕 New order from ${d.name}!`);
                 }
                 // Skip locally deleted orders
-                if (d.archived || _deletedIds.has(String(d.id)) || _deletedIds.has(String(d._fbId))) {
+                if (d.archived || _deletedIds.has(String(d._fbId))) {
                     d.archived = true; // ensure flag
                 }
                 fbOrders.push(d);
@@ -774,15 +774,16 @@ async function fbDeleteOrder(order) {
 }
 
 // ========== RENDERING ==========
-// Local deleted set — survives Firebase re-sync
-const _deletedIds = new Set(JSON.parse(localStorage.getItem('qc_deleted') || '[]'));
+// Local deleted set — uses ONLY _fbId (Firestore doc IDs), never numeric ids
+const _rawDeleted = JSON.parse(localStorage.getItem('qc_deleted') || '[]');
+const _deletedIds = new Set(_rawDeleted.filter(id => id && id.length > 10));
+localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
 function markLocalDeleted(order) {
-    _deletedIds.add(String(order.id));
     if (order._fbId) _deletedIds.add(String(order._fbId));
     localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
 }
 function findOrder(id) { return orders.find(o => String(o._fbId) === String(id)) || orders.find(o => String(o.id) === String(id)); }
-function activeOrders() { return orders.filter(o => !o.archived && !_deletedIds.has(String(o.id)) && !_deletedIds.has(String(o._fbId))); }
+function activeOrders() { return orders.filter(o => !o.archived && !_deletedIds.has(String(o._fbId))); }
 
 function render() {
     renderStats();
@@ -1143,7 +1144,6 @@ function restoreOrder(id) {
     delete order.archived;
     delete order.archivedAt;
     // Remove from deleted set
-    _deletedIds.delete(String(order.id));
     if (order._fbId) _deletedIds.delete(String(order._fbId));
     localStorage.setItem('qc_deleted', JSON.stringify([..._deletedIds]));
     fbSaveOrder(order);
@@ -1182,7 +1182,7 @@ function toggleArchived() {
 function renderArchived() {
     const panel = document.getElementById('archivedPanel');
     if (!panel) return;
-    let archived = orders.filter(o => o.archived || _deletedIds.has(String(o.id)) || _deletedIds.has(String(o._fbId)));
+    let archived = orders.filter(o => o.archived || _deletedIds.has(String(o._fbId)));
     archived.sort((a, b) => (b.archivedAt || '').localeCompare(a.archivedAt || ''));
     const total = archived.length;
     if (total === 0) {
