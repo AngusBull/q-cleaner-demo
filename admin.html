@@ -1374,7 +1374,7 @@ function quickText(id) {
 
 function showTextModal(preselect) {
     const sel = document.getElementById('txt_to');
-    sel.innerHTML = orders.filter(o => o.status !== 'complete').map(o => 
+    sel.innerHTML = activeOrders().filter(o => o.status !== 'complete').map(o => 
         `<option value="${o.id}" ${preselect === o.id ? 'selected' : ''}>${o.name} — ${o.phone}</option>`
     ).join('');
     document.getElementById('txt_message').value = '';
@@ -1493,9 +1493,11 @@ function renderReports() {
     const monthAgo = new Date(now - 30*86400000).toISOString().split('T')[0];
     const prevMonthStart = new Date(now - 60*86400000).toISOString().split('T')[0];
 
+    // Use only active (non-deleted) orders for reports
+    const _ao = activeOrders();
     // Filter orders by selected period
-    const periodOrders = reportPeriod === 'all' ? orders : orders.filter(o => o.created >= periodStart);
-    const prevPeriodOrders = reportPeriod === 'all' ? [] : orders.filter(o => o.created >= prevPeriodStart && o.created < periodStart);
+    const periodOrders = reportPeriod === 'all' ? _ao : _ao.filter(o => o.created >= periodStart);
+    const prevPeriodOrders = reportPeriod === 'all' ? [] : _ao.filter(o => o.created >= prevPeriodStart && o.created < periodStart);
     const periodLabel = reportPeriod === '7' ? 'This Week' : reportPeriod === '30' ? 'This Month' : reportPeriod === '90' ? 'Last 90 Days' : reportPeriod === '365' ? 'This Year' : 'All Time';
 
     // Helper to get revenue from an order
@@ -1511,7 +1513,7 @@ function renderReports() {
     const periodRevenue = periodOrders.reduce((s, o) => s + getRevenue(o), 0);
     const prevPeriodRevenue = prevPeriodOrders.reduce((s, o) => s + getRevenue(o), 0);
     const revenueChange = prevPeriodRevenue > 0 ? ((periodRevenue - prevPeriodRevenue) / prevPeriodRevenue * 100).toFixed(0) : 0;
-    const allTimeRevenue = orders.reduce((s, o) => s + getRevenue(o), 0);
+    const allTimeRevenue = _ao.reduce((s, o) => s + getRevenue(o), 0);
 
     // Volume
     const totalOrders = periodOrders.length;
@@ -1631,7 +1633,7 @@ function renderReports() {
             <div class="report-card">
                 <h4>All-Time Revenue</h4>
                 <div class="report-big">$${allTimeRevenue.toFixed(0)}</div>
-                <div class="report-sub">${orders.length} total orders</div>
+                <div class="report-sub">${_ao.length} total orders</div>
             </div>
         </div>
 
