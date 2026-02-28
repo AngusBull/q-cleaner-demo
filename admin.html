@@ -605,6 +605,7 @@ function renderAdminItems() {
     const withTax = totalPrice + tax;
     document.getElementById('adminItemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
     document.getElementById('adminItemTotal').textContent = '$' + withTax.toFixed(2) + (totalPrice > 0 ? ' (incl $' + tax.toFixed(2) + ' tax)' : '');
+    document.getElementById('adminItemTotal').dataset.subtotal = totalPrice.toFixed(2);
     // Auto-fill price field if no override
     const priceField = document.getElementById('o_price');
     if (!priceField.dataset.overridden) priceField.value = '$' + withTax.toFixed(2);
@@ -986,9 +987,9 @@ function createOrder(e) {
         ticketNum: ++ticketCounter,
     };
     localStorage.setItem('qc_ticketCounter', String(ticketCounter));
-    // Parse numeric total from price string (e.g. "$45.00" → 45.00)
-    const priceStr = order.price.replace(/[^0-9.]/g, '');
-    const priceNum = parseFloat(priceStr) || 0;
+    // Use pre-tax subtotal from item picker (avoids double-taxing)
+    const subtotalEl = document.getElementById('adminItemTotal');
+    const priceNum = parseFloat(subtotalEl.dataset.subtotal) || parseFloat(order.price.replace(/[^0-9.]/g, '')) || 0;
     const isPickup = order.type === 'pickup';
     const deliveryFee = (isPickup && priceNum < 30) ? 5.99 : 0;
     order.subtotal = priceNum;
